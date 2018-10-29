@@ -8,9 +8,8 @@ class galaxy{
 
 }
 
-
-int main () {
 */
+int main () {
 	setup_relations(2,4);
 
 	return 0;
