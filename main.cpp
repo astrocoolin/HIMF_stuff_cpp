@@ -10,7 +10,8 @@ class galaxy{
 
 */
 int main () {
-	setup_relations(2,4);
+	setup_relations(9.5,4,30,2.5);
+	
 
 	return 0;
 }
