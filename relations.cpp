@@ -23,7 +23,8 @@ double error_spread(double value[2]) {
 	unsigned seed = chrono::system_clock::now().time_since_epoch().count();
 	default_random_engine generator(seed);
 	normal_distribution<double> distribution(value[0],value[1]);
-	return distribution(generator);
+	//return distribution(generator);
+	return(value[0]);
 }
 
 double DHI_calc(double MHI) {
@@ -71,9 +72,9 @@ double Mstar_calc(double MHI) {
 	double slope = error_spread(in_slope);
 	double scatter = error_spread(scatr);
 
-	double Mstar = slope*log10(Mgas)+constant;
+	double Mstar = log10(Mgas)*1./slope-constant/slope;
 	double spread[2] = {Mstar,scatter};
-	Mstar = error_spread(spread);
+	//Mstar = error_spread(spread);
 	
 	return pow(10.0,Mstar);
 	
@@ -281,10 +282,26 @@ double f (double x, void * p) {
 	double vt  = (params->vt);
 	double Rs  = (params->Rs);
 
-	// double f1 = exp(-1.0*pow((x-0.4*RHI)/(sqrt(2.0)*xdx),2.0));
-	// double f2 = (sqrt(vt/120.0)-1.0)*exp(-x/Rs);
-	double f = (exp(-pow((x-0.4*RHI)/(sqrt(2.0)*xdx),2.0))-
-		(sqrt(vt/120.0)-1.0)*exp(-x/Rs))*x*2.0*3.1415926535;
+	double f1 = exp(- pow((x-0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
+	double f2 = (sqrt(vt/120.0)-1)*exp(-x/Rs);
+	
+	double f = (f1-f2)*x*2.0*3.1415926535; /*= (exp(-pow((x-0.4*RHI)/(sqrt(2.0)*xdx),2.0))-
+		(sqrt(vt/120.0)-1.0)*exp(-x/Rs))*x*2.0*3.1415926535;*/
+
+	return f;
+}
+
+double sbr_func (double x, double RHI, double xdx, double vt, double Rs) {
+	//struct my_f_params * params = (struct my_f_params *)p;
+	//double RHI = (params->RHI);
+	//double xdx = (params->xdx);
+	//double vt  = (params->vt);
+	//double Rs  = (params->Rs);
+
+	double f1 = exp(- pow((x-0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
+	double f2 = (sqrt(vt/120.0)-1)*exp(-x/Rs);
+	
+	double f = (f1-f2);
 
 	return f;
 }
@@ -301,8 +318,6 @@ double integrate_inf(double RHI,double xdx, double vt, double Rs){
 	F.params = &alpha;
  	gsl_integration_qagiu (&F, 0, 1e-12, 1e-6, 1000,
 		w, &result, &error);
-	cout << RHI << " " <<xdx/RHI-0.36 << " " <<vt << " " << Rs << " " << log10(result*1000*1000)<< endl;
-	//cout << log10(error*1000.*1000.) << " " << log10(result*1000.*1000.) << " " << log10((result+error)*1000.*1000.) << endl;
 }
 
 
@@ -313,10 +328,9 @@ sbr_params sbr_calc(double *radi,double RHI,double vt,double Rs,int radi_len){
 	double Mass_guess[dx_range];
 	for (int i=0;i<dx_range;i++){
 		delta[i] = i*0.005 - 0.15;
-		Mass_guess[i] = log10(integrate_inf(RHI,(x+delta[i])*RHI,vt,Rs)*1000.0*1000.0);
-		// cout << Mass_guess[i] << " " << i << " " << delta[i] << endl;
+		Mass_guess[i] = log10(integrate_inf(RHI,delta[i],vt,Rs)*1000.0*1000.0/sbr_func(RHI,RHI,delta[i],vt,Rs));
+		cout << Mass_guess[i] << " " << i << " " << delta[i] << " "  << endl;
 	}
-
 	
 	return {};
 }
@@ -337,6 +351,7 @@ int setup_relations(double mass,double beams, double beam, double ring_thickness
 	double MHI = pow(10.0,mass);
 	double DHI = DHI_calc(MHI) ;
 	double Mstar = Mstar_calc(MHI);
+	cout << log10(Mstar) << endl;
 	double vflat = BTFR(Mstar + 1.4*MHI);
 	double Rs = (DHI/2.0) * 0.18;
 	double Ropt = Ropt_calc(vflat);
@@ -363,7 +378,7 @@ int setup_relations(double mass,double beams, double beam, double ring_thickness
 		//cout << radi[i] << " "<< vrot[i] << endl;}
 	}
 	sbr_params sbr_stuff = sbr_calc(radi,DHI/2.0,vflat,Rs,radi_len);
-	cout << sbr_stuff.x_dx << " " << sbr_stuff.Mass_guess << endl;
+	cout << sbr_stuff.x_dx << " " << sbr_stuff.Mass_guess   <<endl;
 
 	//double radi,double RHI,double vt,double Rs)
 	/*
