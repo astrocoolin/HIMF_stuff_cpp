@@ -8,9 +8,9 @@
 
 using namespace std;
 
-
 int argmin(double *array,int len){
-	int minloc = std::distance(array, std::min_element(array,array+len));
+	int minloc;
+	minloc = std::distance(array, std::min_element(array,array+len));
 	return minloc;
 }
 
@@ -74,7 +74,6 @@ double Mstar_calc(double MHI) {
 
 	double Mstar = log10(Mgas)*1./slope-constant/slope;
 	double spread[2] = {Mstar,scatter};
-	//Mstar = error_spread(spread);
 	
 	return pow(10.0,Mstar);
 	
@@ -155,11 +154,7 @@ double rt_func(double x){
 	return a*log10(-x)-b;
 }
 
-struct Mag_params {
-    double Mag;
-    double alpha;
-    double slope;
-};
+struct Mag_params {double Mag; double alpha; double slope;};
 
 
 Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar){
@@ -182,7 +177,6 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar){
 	double a_temp;
 	double Mag_guess;
 
-	
 	// Set slope from NIHAO 17
 	double slope_sparc = 0.123 - 0.137*(log10(mstar)-9.471) ;
 	double spread[2] = {slope_sparc,0.19};
@@ -195,8 +189,8 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar){
 		for (int i=0;i <= Mag_length ; i++){
 			Mag[i] = -25.0 + 0.001*i;
 			vt_0[i] = V0_func(Mag[i]);
-			rt[i] = rt_func(Mag[i]);
-			if (j > 0) {
+			rt[i] = Ropt * rt_func(Mag[i]);
+			if (j == 0) {
 				a[i] = a_func(Mag[i]);
 			} else {
 				a[i] = a_temp;
@@ -265,11 +259,10 @@ double make_vrot(double radi,double Mag,double Ropt,double alpha){
 	double rt = Ropt * rt_func(Mag);
 	double vrot;
 	double a = alpha;
-	//for (int i =0;i<radi_len;i++){
+
 	vrot = vt*(1.0 - exp(-radi/rt))*(1.0 + a*radi/rt);
-	//}
-	return vrot;
-}
+
+	return vrot;}
 
 struct sbr_params { double x_dx; double Mass_guess;};
 
@@ -284,10 +277,12 @@ double f (double x, void * p) {
 
 	double f1 = exp(- pow((x-0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
 	double f2 = (sqrt(vt/120.0)-1)*exp(-x/Rs);
-	
-	double f = (f1-f2)*x*2.0*3.1415926535; /*= (exp(-pow((x-0.4*RHI)/(sqrt(2.0)*xdx),2.0))-
-		(sqrt(vt/120.0)-1.0)*exp(-x/Rs))*x*2.0*3.1415926535;*/
 
+	double f1_RHI = exp(- pow((RHI-0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
+	double f2_RHI = (sqrt(vt/120.0)-1)*exp(-RHI/Rs);
+	
+	
+	double f = (f1-f2)*x*2.0*3.1415926535;
 	return f;
 }
 
@@ -298,13 +293,32 @@ double sbr_func (double x, double RHI, double xdx, double vt, double Rs) {
 	//double vt  = (params->vt);
 	//double Rs  = (params->Rs);
 
-	double f1 = exp(- pow((x-0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
-	double f2 = (sqrt(vt/120.0)-1)*exp(-x/Rs);
+	double f1 = exp(- pow((x-  0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
+	double f2 = (sqrt(vt/120.0)-1)*exp(-x  /Rs);
 	
 	double f = (f1-f2);
 
 	return f;
 }
+
+double sbr_func_norm (double x, double RHI, double xdx, double vt, double Rs) {
+	//struct my_f_params * params = (struct my_f_params *)p;
+	//double RHI = (params->RHI);
+	//double xdx = (params->xdx);
+	//double vt  = (params->vt);
+	//double Rs  = (params->Rs);
+
+	double f1 = exp(- pow((x-  0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
+	double f2 = (sqrt(vt/120.0)-1)*exp(-x  /Rs);
+
+	double f1_RHI = exp(- pow((RHI-0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
+	double f2_RHI = (sqrt(vt/120.0)-1)*exp(-RHI/Rs);
+	
+	double f = (f1-f2)/(f1_RHI-f2_RHI);
+
+	return f;
+}
+
 
 double integrate_inf(double RHI,double xdx, double vt, double Rs){
 	gsl_integration_workspace * w 
@@ -321,28 +335,27 @@ double integrate_inf(double RHI,double xdx, double vt, double Rs){
 }
 
 
-sbr_params sbr_calc(double *radi,double RHI,double vt,double Rs,int radi_len){
+sbr_params sbr_calc(double RHI,double vt,double Rs,int radi_len,double mass){
 	double x = 0.36;
 	int dx_range = (0.15+0.15)/0.005;
-	double delta[dx_range];
-	double Mass_guess[dx_range];
-	for (int i=0;i<dx_range;i++){
+	double delta[dx_range+1];
+	double Mass_guess[dx_range+1];
+	double Mass_compare[dx_range+1];
+	for (int i=0;i<dx_range+1;i++){
 		delta[i] = i*0.005 - 0.15;
-		Mass_guess[i] = log10(integrate_inf(RHI,delta[i],vt,Rs)*1000.0*1000.0/sbr_func(RHI,RHI,delta[i],vt,Rs));
-		cout << Mass_guess[i] << " " << i << " " << delta[i] << " "  << endl;
+		Mass_guess[i] = log10(integrate_inf(RHI,delta[i],vt,Rs)
+				*1000.0*1000.0/(sbr_func(RHI,RHI,delta[i],vt,Rs)));
+		Mass_compare[i] = abs(Mass_guess[i] - mass) ;
 	}
-	
-	return {};
+	int j = argmin(Mass_compare,dx_range+1);
+	return {delta[j],Mass_guess[j]};
 }
 
 
-double make_sbr(double radi,double Rs,double DHI,double vt,double mass){
+double make_sbr(double radi,double xdx, double RHI,double vt, double Rs){
 	// Make the surface brightness profile
-	double RHI =DHI/2.0;
-	double x = 0.36;
-
-	// consider a range of x+dx to get closest match to HI mass
-
+	return sbr_func_norm(radi, RHI, xdx, vt, Rs)
+		*1.24756e+20/(6.0574E5*1.823E18*(2.*3.1415926535/log(256.)));
 }
 
 
@@ -357,6 +370,7 @@ int setup_relations(double mass,double beams, double beam, double ring_thickness
 	double Ropt = Ropt_calc(vflat);
 	Mag_params Mag_stuff = Mag_calc(vflat,Ropt,DHI/2.0,Mstar);
 	double Mag = Mag_stuff.Mag;
+	cout << Mag << " Mag" << endl;
 	double alpha = Mag_stuff.alpha;
 	double slope  = Mag_stuff.slope;
 	double dist = DHI * (206265./(beam*beams));
@@ -365,30 +379,21 @@ int setup_relations(double mass,double beams, double beam, double ring_thickness
 	int radi_len = (DHI+delta) /delta;
 	double radi[radi_len+1];
 	double vrot[radi_len+1];
+	double  sbr[radi_len+1];
 	int index;
 	for ( double i=DHI; i >= 0;i-=delta){
-		// cout << i << " " << i/delta+1 << endl;
 		index = i/delta+1;
 		radi[index] = i;}
+	
+	sbr_params sbr_stuff = sbr_calc(DHI/2.0,vflat,Rs,radi_len,mass);
+	cout << vflat << " vflat "<< slope << " slope "<<endl;
 
 	radi[0] = 0.0;
-	//cout << "radi " << "vrot" << endl;
 	for (int i =0;i <= radi_len;i++){
 		vrot[i] = make_vrot(radi[i],Mag,Ropt,alpha);
-		//cout << radi[i] << " "<< vrot[i] << endl;}
+		sbr[i]	= make_sbr(radi[i],sbr_stuff.x_dx,DHI/2.0,vflat,Rs);
+		cout << radi[i] << " " << vrot[i] << " " << sbr[i] << endl;
 	}
-	sbr_params sbr_stuff = sbr_calc(radi,DHI/2.0,vflat,Rs,radi_len);
-	cout << sbr_stuff.x_dx << " " << sbr_stuff.Mass_guess   <<endl;
-
-	//double radi,double RHI,double vt,double Rs)
-	/*
-	for (int i=0; i <= radi_len; i++){
-		sbr[i] = make_sbr(radi[i],Mag,Ropt,alpha);
-	}
-	*/
-	// cout << DHI << " " << radi[radi_len] << " inbetween "<< radi[radi_len-1] << " scoop "<< radi[0] << endl;
-	cout << dist/1000. << " " << DHI << " " << Mag << " " << delta << " " <<radi_len << endl;
-
 	return 0;
 }
 
