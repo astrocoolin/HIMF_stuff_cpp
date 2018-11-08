@@ -5,8 +5,9 @@
 #include <random>
 #include <algorithm>
 #include <gsl/gsl_integration.h>
-
 using namespace std;
+
+int deffile_print(double *radi,double *vrot,double *sbr,double *z,int radi_len, double inclination);
 
 int argmin(double *array,int len){
 	int minloc;
@@ -198,8 +199,8 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar){
 		}
 
 		// Outer edge, and half of it for the slope
-		x2 = RHI * 4.0/3.0;
-		x1 = RHI * 2.0/3.0;
+		x2 = RHI * 2.0;
+		x1 = RHI * 1.0;
 	
 		// Calculate rotation velocities at Ropt for all vt_0, rt
 		for (int i=0; i<= Mag_length;i++){
@@ -358,9 +359,13 @@ double make_sbr(double radi,double xdx, double RHI,double vt, double Rs){
 		*1.24756e+20/(6.0574E5*1.823E18*(2.*3.1415926535/log(256.)));
 }
 
+double make_z(double radi,double vrot,double sigma){
+	return  sigma / ( sqrt(2./3.) * vrot/radi);
+}
 
 
-int setup_relations(double mass,double beams, double beam, double ring_thickness) {
+
+int setup_relations(double mass,double beams, double beam, double ring_thickness, double inclination) {
 	double MHI = pow(10.0,mass);
 	double DHI = DHI_calc(MHI) ;
 	double Mstar = Mstar_calc(MHI);
@@ -380,6 +385,7 @@ int setup_relations(double mass,double beams, double beam, double ring_thickness
 	double radi[radi_len+1];
 	double vrot[radi_len+1];
 	double  sbr[radi_len+1];
+	double  z[radi_len+1];
 	int index;
 	for ( double i=DHI; i >= 0;i-=delta){
 		index = i/delta+1;
@@ -387,13 +393,23 @@ int setup_relations(double mass,double beams, double beam, double ring_thickness
 	
 	sbr_params sbr_stuff = sbr_calc(DHI/2.0,vflat,Rs,radi_len,mass);
 	cout << vflat << " vflat "<< slope << " slope "<<endl;
-
+	double Vdisp = 2.0;
 	radi[0] = 0.0;
 	for (int i =0;i <= radi_len;i++){
 		vrot[i] = make_vrot(radi[i],Mag,Ropt,alpha);
 		sbr[i]	= make_sbr(radi[i],sbr_stuff.x_dx,DHI/2.0,vflat,Rs);
-		cout << radi[i] << " " << vrot[i] << " " << sbr[i] << endl;
+		if (i!=0){
+			z[i]=make_z(radi[i],vrot[i],Vdisp);
+
+		}
+		else	z[i]=make_z(radi[1],vrot[1],Vdisp);
+		radi[i] = radi[i] / dist * 3600.0 * (180.0/3.14159265359);
+		cout << radi[i] << " " << vrot[i] << " " << sbr[i] << " "<< z[i]<< endl;
 	}
+
+	deffile_print(radi,vrot,sbr,z,radi_len,inclination);
 	return 0;
+
+
 }
 
