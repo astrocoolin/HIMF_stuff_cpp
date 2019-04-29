@@ -75,7 +75,7 @@ double Mstar_calc(double MHI) {
 
 	double Mstar = log10(Mgas)*1./slope-constant/slope;
 	double spread[2] = {Mstar,scatter};
-	
+
 	return pow(10.0,Mstar);
 	
 }	
@@ -265,7 +265,6 @@ double make_vrot(double radi,double Mag,double Ropt,double alpha){
 
 	return vrot;}
 
-struct sbr_params { double x_dx; double Mass_guess;};
 
 struct my_f_params {double RHI; double xdx; double vt; double Rs;};
 
@@ -333,8 +332,11 @@ double integrate_inf(double RHI,double xdx, double vt, double Rs){
 	F.params = &alpha;
  	gsl_integration_qagiu (&F, 0, 1e-12, 1e-6, 1000,
 		w, &result, &error);
+	gsl_integration_workspace_free(w);
 }
 
+
+struct sbr_params { double x_dx; double Mass_guess;};
 
 sbr_params sbr_calc(double RHI,double vt,double Rs,int radi_len,double mass){
 	double x = 0.36;
@@ -363,19 +365,22 @@ double make_z(double radi,double vrot,double sigma){
 	return  sigma / ( sqrt(2./3.) * vrot/radi);
 }
 
+struct Galaxy_params {
+        double r_MHI, r_DHI, r_Mstar, r_Ropt, r_vflat, r_alpha;
+        double r_dx, r_Mag, r_slope, r_dist, r_beams;} ;
 
+Galaxy_params setup_relations(double mass,double beams, double beam, double ring_thickness, bool scatter) {
 
-int setup_relations(double mass,double beams, double beam, double ring_thickness, double inclination) {
 	double MHI = pow(10.0,mass);
 	double DHI = DHI_calc(MHI) ;
 	double Mstar = Mstar_calc(MHI);
-	cout << log10(Mstar) << endl;
+	//cout << log10(Mstar) << " Mstar" << endl;
 	double vflat = BTFR(Mstar + 1.4*MHI);
 	double Rs = (DHI/2.0) * 0.18;
 	double Ropt = Ropt_calc(vflat);
 	Mag_params Mag_stuff = Mag_calc(vflat,Ropt,DHI/2.0,Mstar);
 	double Mag = Mag_stuff.Mag;
-	cout << Mag << " Mag" << endl;
+	//cout << Mag << " Mag" << endl;
 	double alpha = Mag_stuff.alpha;
 	double slope  = Mag_stuff.slope;
 	double dist = DHI * (206265./(beam*beams));
@@ -386,30 +391,38 @@ int setup_relations(double mass,double beams, double beam, double ring_thickness
 	double vrot[radi_len+1];
 	double  sbr[radi_len+1];
 	double  z[radi_len+1];
+	
+	/*
+	for ( int i=0; i <= radi_len;i++){
+		radi[i] = i*delta;
+	}
+	*/
 	int index;
 	for ( double i=DHI; i >= 0;i-=delta){
 		index = i/delta+1;
-		radi[index] = i;}
-	
+		radi[index] = i;
+	}
 	sbr_params sbr_stuff = sbr_calc(DHI/2.0,vflat,Rs,radi_len,mass);
-	cout << vflat << " vflat "<< slope << " slope "<<endl;
+	// cout << vflat << " vflat "<< slope << " slope "<<endl;
 	double Vdisp = 2.0;
 	radi[0] = 0.0;
 	for (int i =0;i <= radi_len;i++){
 		vrot[i] = make_vrot(radi[i],Mag,Ropt,alpha);
-		sbr[i]	= make_sbr(radi[i],sbr_stuff.x_dx,DHI/2.0,vflat,Rs);
+		//sbr[i]	= make_sbr(radi[i],0.03,DHI/2.0,vflat,Rs);
+		sbr[i] = make_sbr(radi[i],sbr_stuff.x_dx,DHI/2.0,vflat,Rs);
 		if (i!=0){
 			z[i]=make_z(radi[i],vrot[i],Vdisp);
 
 		}
 		else	z[i]=make_z(radi[1],vrot[1],Vdisp);
 		radi[i] = radi[i] / dist * 3600.0 * (180.0/3.14159265359);
-		cout << radi[i] << " " << vrot[i] << " " << sbr[i] << " "<< z[i]<< endl;
+		//cout << radi[i] << " " << vrot[i] << " " << sbr[i] << " "<< z[i]<< endl;
 	}
+	double sigma = 0.36*(DHI/2.0)+0.05;
+	//return {MHI, DHI, Mstar, Ropt, vflat, alpha,0.03, Mag,slope,dist,beams};
+	return {MHI, DHI, Mstar, Ropt, vflat, alpha,sbr_stuff.x_dx, Mag,slope,dist,beams};
 
-	deffile_print(radi,vrot,sbr,z,radi_len,inclination);
-	return 0;
-
+	//deffile_print(radi,vrot,sbr,z,radi_len,inclination);
 
 }
 
