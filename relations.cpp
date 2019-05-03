@@ -19,16 +19,19 @@ double arcsec_to_rad(double value){
 	return value*(3.14159265359/648000.);
 }
 
-double error_spread(double value[2]) {
+double error_spread(double value[2], bool scatter_flag) {
 	//construct a trivial random generator engine from a time-based seed
 	unsigned seed = chrono::system_clock::now().time_since_epoch().count();
 	default_random_engine generator(seed);
 	normal_distribution<double> distribution(value[0],value[1]);
-	//return distribution(generator);
+	if (scatter_flag){
+		return distribution(generator);
+	} else {
 	return(value[0]);
+	}
 }
 
-double DHI_calc(double MHI) {
+double DHI_calc(double MHI, bool scatter_flag) {
  	// Jing Wang, Koribalski, et al 2016 
 	// HI Mass - Diameter relationship 
 	// https://arxiv.org/abs/1605.01489
@@ -37,14 +40,14 @@ double DHI_calc(double MHI) {
 	double in_constant[2] = {-3.293,0.009} ;
 	double scatr = 0.06 ;
 
-	double constant = error_spread(in_constant);
-	double slope = error_spread(in_slope);
+	double constant = error_spread(in_constant,scatter_flag);
+	double slope = error_spread(in_slope,scatter_flag);
 	
 	return pow(10.0,slope*log10(MHI)+constant);
 
 };
 
-double Mstar_calc(double MHI) {
+double Mstar_calc(double MHI, bool scatter_flag) {
 	// Bradford et al 2015, Fig 5 
 	// HI Mass - Stellar Mass Relationship 
 	// https://arxiv.org/abs/1505.04819
@@ -52,12 +55,13 @@ double Mstar_calc(double MHI) {
 	double in_slope[2] ;
 	double in_constant[2] ; 
 	double scatr[2] ;
-	
+	Mgas = log10(Mgas);
+
 	if (Mgas  < 9.2832) {
 		in_slope[0] = 1.052 ;
 		in_slope[1] = 0.058 ;
-		in_constant[0] = 0.461 ;
-		in_constant[1] = 0.011 ;
+		in_constant[0] = 0.236 ;
+		in_constant[1] = 0.476 ;
 		scatr[0] = 0.285 ;
 		scatr[1] = 0.019 ;
 	} else {
@@ -69,18 +73,18 @@ double Mstar_calc(double MHI) {
 		scatr[1] = 0.006 ;
 	}
 
-	double constant = error_spread(in_constant);
-	double slope = error_spread(in_slope);
-	double scatter = error_spread(scatr);
+	double constant = error_spread(in_constant,scatter_flag);
+	double slope = error_spread(in_slope,scatter_flag);
+	double scatter = error_spread(scatr,scatter_flag);
 
-	double Mstar = log10(Mgas)*1./slope-constant/slope;
+	double Mstar = Mgas*1./slope-constant/slope;
 	double spread[2] = {Mstar,scatter};
 
 	return pow(10.0,Mstar);
 	
 }	
 
-double BTFR(double Mbar) {
+double BTFR(double Mbar, bool scatter_flag) {
 	// Bradford et al 2015, Fig 6
 	// Baryonic Tully-Fisher relationship
 	// https://arxiv.org/abs/1505.04819
@@ -89,18 +93,18 @@ double BTFR(double Mbar) {
 	double in_constant[2] = {-0.672,0.041};
 	double scatr[2] = {0.075,0.002};
 
-	double constant = error_spread(in_constant);
-	double slope = error_spread(in_slope);
-	double scatter = error_spread(scatr);
+	double constant = error_spread(in_constant,scatter_flag);
+	double slope = error_spread(in_slope,scatter_flag);
+	double scatter = error_spread(scatr,scatter_flag);
 
 	double logv = log10(Mbar) * slope + constant;
 	double spread[2] = {logv,scatter};
-	logv = error_spread(spread);
+	logv = error_spread(spread,scatter_flag);
 
 	return pow(10.0,logv);
 }
 
-double Ropt_calc(double vflat) {
+double Ropt_calc(double vflat, bool scatter_flag) {
 	// Saintonge et al 2007
 	// Optical Radius (r83) - Vflat Relationship
 	// https://arxiv.org/abs/0710.0760
@@ -108,15 +112,16 @@ double Ropt_calc(double vflat) {
 	double in_slope[2] = {0.56,0.04};
 	double in_constant[2] = {-0.36,0.08};
 	double scatr = 0.16;
+	double h = 0.70;
 
-	double constant = error_spread(in_constant);
-        double slope = error_spread(in_slope);
+	double constant = error_spread(in_constant,scatter_flag);
+        double slope = error_spread(in_slope,scatter_flag);
 
 	double Ropt = constant + slope * log10(vflat);
 	double spread[2] = {Ropt,scatr};
-	Ropt = error_spread(spread);
+	Ropt = error_spread(spread,scatter_flag);
 
-	return pow(10.0,Ropt);
+	return h*pow(10.0,Ropt);
 
 }
 
@@ -150,15 +155,15 @@ double rt_func(double x){
 	// based on Catinella et al 2007
 	// https://arxiv.org/abs/astro-ph/0512051
 	// Best-fitting parameters from SciPy
-	double a = -2.07573321;
-	double b = -2.97620420;
-	return a*log10(-x)-b;
+	double a = 0.04264749;
+	double b = 1.12975029;
+	return a*x+b;
 }
 
 struct Mag_params {double Mag; double alpha; double slope;};
 
 
-Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar){
+Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar,bool scatter_flag){
 	// Find Mag, and slope based on
 	// Catinella et al 2007 (Mag)
     	// https://arxiv.org/abs/astro-ph/0512051
@@ -167,7 +172,7 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar){
 	
 	// Create range of magnitudes
 	// and set parameters for all mags
-	int Mag_length = 25000;
+	int Mag_length = 24000;
 	int guess_a = 4400;
 	double Mag[Mag_length];
 	double vt[Mag_length];
@@ -181,14 +186,14 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar){
 	// Set slope from NIHAO 17
 	double slope_sparc = 0.123 - 0.137*(log10(mstar)-9.471) ;
 	double spread[2] = {slope_sparc,0.19};
-	slope_sparc = error_spread(spread);
+	slope_sparc = error_spread(spread,scatter_flag);
 
 	double x1,x2;
 	
 	// This is where I'd begin the loop
 	for (int j=0; j<2; j++){
 		for (int i=0;i <= Mag_length ; i++){
-			Mag[i] = -25.0 + 0.001*i;
+			Mag[i] = -24.0 + 0.001*i;
 			vt_0[i] = V0_func(Mag[i]);
 			rt[i] = Ropt * rt_func(Mag[i]);
 			if (j == 0) {
@@ -199,12 +204,13 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar){
 		}
 
 		// Outer edge, and half of it for the slope
-		x2 = RHI * 2.0;
-		x1 = RHI * 1.0;
+		x2 = RHI * 1.0;
+		x1 = RHI * 0.5;
 	
 		// Calculate rotation velocities at Ropt for all vt_0, rt
 		for (int i=0; i<= Mag_length;i++){
 			vt[i] = vt_0[i] * (1.0 - exp(-Ropt/rt[i])) * (1.0 + a[i] * Ropt/rt[i]);
+			//if (abs(vt[i] - vrot) < 0.1) {cout << vt[i] << " " << vrot << " " << i << " " << Mag[i] << " " << a[i] << " " << rt[i] << " " << vt_0[i] << " " << Ropt << endl;}
 		}
 		
 		for (int i=0; i<= Mag_length;i++) {vrot_compare[i] = abs(vrot - vt[i]); }
@@ -214,6 +220,7 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar){
 		// that matches the Magnitude
 		int ind = argmin(vrot_compare,Mag_length);
 		Mag_guess = Mag[ind];
+		// cout << Mag_guess << endl;
 		double vt_guess = vt[ind];
 		double rt_guess = rt[ind];
 		double vt_0_guess = vt_0[ind];
@@ -227,7 +234,7 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar){
 	
 		// Consider a range of values of alpha
 		for (int i=0; i<= guess_a;i++) {
-			a_guess[i] =-0.04 + 0.0001*i;
+			a_guess[i] =0.00 + 0.0001*i;
 			slope1[i] = ((1.-exp(-x2/rt_guess))*(1.+a_guess[i]*x2/rt_guess));
 			slope2[i] = ((1.-exp(-x1/rt_guess))*(1.+a_guess[i]*x1/rt_guess));
 			slope_sparc_arr[i] = slope_sparc;
@@ -245,9 +252,14 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar){
 		}
 		for (int i=0; i<= guess_a;i++) {
 			slope_sparc_arr[i]=abs(slope_sparc-slope[i]);
+			//cout << slope[i] << " slope " << slope_sparc << " target " << a_guess[i] << "a guess "<< endl;
+
 		}
 		a_temp = a_guess[argmin(slope_sparc_arr,guess_a)];
+		if (argmin(slope_sparc_arr,guess_a) == 0) { a_temp = a_guess[1]; } 
+		if (a_temp < 0) { a_temp = 0; }
 	}
+	// cout << slope_sparc << "poo poo" << slope[argmin(slope_sparc_arr,guess_a)] << endl;
 	return {Mag_guess,a_temp,slope_sparc};
 }
 
@@ -372,13 +384,13 @@ struct Galaxy_params {
 Galaxy_params setup_relations(double mass,double beams, double beam, double ring_thickness, bool scatter) {
 
 	double MHI = pow(10.0,mass);
-	double DHI = DHI_calc(MHI) ;
-	double Mstar = Mstar_calc(MHI);
+	double DHI = DHI_calc(MHI,scatter) ;
+	double Mstar = Mstar_calc(MHI,scatter);
 	//cout << log10(Mstar) << " Mstar" << endl;
-	double vflat = BTFR(Mstar + 1.4*MHI);
+	double vflat = BTFR(Mstar + 1.4*MHI,scatter);
 	double Rs = (DHI/2.0) * 0.18;
-	double Ropt = Ropt_calc(vflat);
-	Mag_params Mag_stuff = Mag_calc(vflat,Ropt,DHI/2.0,Mstar);
+	double Ropt = Ropt_calc(vflat,scatter);
+	Mag_params Mag_stuff = Mag_calc(vflat,Ropt,DHI/2.0,Mstar,scatter);
 	double Mag = Mag_stuff.Mag;
 	//cout << Mag << " Mag" << endl;
 	double alpha = Mag_stuff.alpha;
@@ -406,6 +418,9 @@ Galaxy_params setup_relations(double mass,double beams, double beam, double ring
 	// cout << vflat << " vflat "<< slope << " slope "<<endl;
 	double Vdisp = 2.0;
 	radi[0] = 0.0;
+	//ofstream myfile;
+	//myfile.open("poop.txt",ios::trunc | ios::out);
+	//myfile << "radi" << " " <<" vrot " << " "<< "sbr" <<" " << "z " << endl; 
 	for (int i =0;i <= radi_len;i++){
 		vrot[i] = make_vrot(radi[i],Mag,Ropt,alpha);
 		//sbr[i]	= make_sbr(radi[i],0.03,DHI/2.0,vflat,Rs);
@@ -416,11 +431,12 @@ Galaxy_params setup_relations(double mass,double beams, double beam, double ring
 		}
 		else	z[i]=make_z(radi[1],vrot[1],Vdisp);
 		radi[i] = radi[i] / dist * 3600.0 * (180.0/3.14159265359);
-		//cout << radi[i] << " " << vrot[i] << " " << sbr[i] << " "<< z[i]<< endl;
+		//myfile << radi[i] << " " << vrot[i] << " " << sbr[i] << " "<< z[i]<< endl;
 	}
 	double sigma = 0.36*(DHI/2.0)+0.05;
 	//return {MHI, DHI, Mstar, Ropt, vflat, alpha,0.03, Mag,slope,dist,beams};
 	return {MHI, DHI, Mstar, Ropt, vflat, alpha,sbr_stuff.x_dx, Mag,slope,dist,beams};
+	//myfile.close();
 
 	//deffile_print(radi,vrot,sbr,z,radi_len,inclination);
 
