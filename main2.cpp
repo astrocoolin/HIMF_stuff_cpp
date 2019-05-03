@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <fstream>
-#include </home/colin/PhD/Codes/HIMF_stuff_cpp/NCC.cpp>
+#include </home/colin/Storage/PhD/HIMF_stuff_cpp/NCC.cpp>
 
 
 using namespace std;

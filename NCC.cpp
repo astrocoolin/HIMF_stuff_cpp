@@ -5,7 +5,7 @@
 #include <random>
 #include <algorithm>
 #include <gsl/gsl_integration.h>
-#include </home/colin/PhD/Codes/HIMF_stuff_cpp/relations.cpp>
+#include </home/colin/Storage/PhD/HIMF_stuff_cpp/relations.cpp>
 
 
 using namespace std;
@@ -34,7 +34,6 @@ class Galaxy {
 			double beamsize = 30;
 			double rwidth = 2.5;
 
-
 			Galaxy_params rerolled_params = setup_relations(mass, newbeams, beamsize, rwidth,scatter);
                 	MHI = rerolled_params.r_MHI;
                 	DHI = rerolled_params.r_DHI;
@@ -50,7 +49,12 @@ class Galaxy {
 			// cout << log10(MHI) << " poop" << endl;
 		}
 
-		void calc_disc(){}
+		void calc_disc(double newbeams){
+			beams = newbeams ;
+			dist = DHI * (206265./(beams * 30.0)) ;
+			delta = 
+		
+		}
 	
 };
 
