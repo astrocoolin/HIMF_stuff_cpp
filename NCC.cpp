@@ -5,16 +5,11 @@
 #include <random>
 #include <algorithm>
 #include <gsl/gsl_integration.h>
-#include </home/colin/Storage/PhD/HIMF_stuff_cpp/relations.cpp>
+#include </home/colin/PhD/Codes/HIMF_stuff_cpp/relations.cpp>
 
 
 using namespace std;
-/*
-struct Galaxy {
-	Galaxy();
-	~Galaxy();
-}
-*/
+
 class Galaxy {
 	public:
 		double MHI;
@@ -49,11 +44,9 @@ class Galaxy {
 			// cout << log10(MHI) << " poop" << endl;
 		}
 
-		void calc_disc(double newbeams){
-			beams = newbeams ;
-			dist = DHI * (206265./(beams * 30.0)) ;
-			delta = 
-		
+		void calc_dist(double newdist){
+			dist = newdist ; 
+			beams =  DHI * (206265./(dist * 30.0)) ;
 		}
 	
 };
