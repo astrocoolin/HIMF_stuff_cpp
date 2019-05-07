@@ -1,3 +1,4 @@
+/*
 #include <iostream>
 #include <fstream>
 #include <math.h>
@@ -5,6 +6,8 @@
 #include <random>
 #include <algorithm>
 #include <gsl/gsl_integration.h>
+#include "relations.h"
+*/
 using namespace std;
 
 int deffile_print(double *radi,double *vrot,double *sbr,double *z,int radi_len, double inclination);

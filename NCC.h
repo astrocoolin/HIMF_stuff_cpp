@@ -1,3 +1,4 @@
+/*
 #include <iostream>
 #include <fstream>
 #include <math.h>
@@ -5,8 +6,8 @@
 #include <random>
 #include <algorithm>
 #include <gsl/gsl_integration.h>
-#include </home/colin/PhD/Codes/HIMF_stuff_cpp/relations.cpp>
-
+*/
+#include "relations.h"
 
 using namespace std;
 
