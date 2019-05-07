@@ -36,10 +36,14 @@ int main() {
 	double mass ;
 	ofstream myfile;
 	myfile.open("Glist.txt",ios::trunc | ios::out);
+	myfile << "index "  << "MHI "<< "DHI " << "Mstar "<< "vflat " << "alpha "  <<  "Mag " << "dist_MPC "  << "beams" << endl;
+	int max ; 
+	cout << "Number of Galaxies?: " ;
+	cin >> max ; 
 	#pragma omp parallel
 	//for (i=0; i < 125321; i++){
-	//for (i=0; i < 100000; i++){
-	for (i=0; i < 1006971; i++){
+	//for (i=0; i < 1006971; i++){
+	for (i=0; i < max; i++){
 		keep = true;
 		while (keep) {
 			V = pow(((c/H) * (pow((1.0+z),2.0)-1.0)/(pow((1.0+z),2.0)+1.0)),3.0) ;
@@ -57,8 +61,8 @@ int main() {
 		Galaxy one;
 		one.reroll(mass,10.0,false);
 		one.calc_dist(D);
-		//myfile << i << " "  << log10(one.MHI) << " "<< one.DHI <<" " << log10(one.Mstar) << " "<< one.Ropt << " "<< one.vflat << " "<< one.alpha  << " "<< one.dx  << " "<< one.Mag <<" " << one.slope  << " "<< one.dist  << " "<< one.beams << " " << endl;
 		#pragma omp critical
+
 		myfile << i << " "  << log10(one.MHI) << " "<< one.DHI <<" " << log10(one.Mstar) << " "<< " "<< one.vflat << " "<< one.alpha  <<  " "<< one.Mag << " "<< one.dist/1000.  << " "<< one.beams << " " << endl;
 	}
 	myfile.close();
