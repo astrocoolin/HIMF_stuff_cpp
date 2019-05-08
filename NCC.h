@@ -47,7 +47,7 @@ class Galaxy {
 
 		void calc_dist(double newdist){
 			dist = newdist ; 
-			beams =  DHI * (206265./(dist * 30.0)) ;
+			beams =  (DHI/dist) * (206265./30.0) ;
 		}
 	
 };

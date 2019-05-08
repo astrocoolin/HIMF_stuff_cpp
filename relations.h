@@ -23,12 +23,14 @@ double arcsec_to_rad(double value){
 }
 
 double error_spread(double value[2], bool scatter_flag) {
-	//construct a trivial random generator engine from a time-based seed
-	unsigned seed = chrono::system_clock::now().time_since_epoch().count();
-	default_random_engine generator(seed);
-	normal_distribution<double> distribution(value[0],value[1]);
+	//construct a true random number
+	random_device rd;
+        mt19937 gen(rd());
+	normal_distribution<double> dis(value[0],value[1]);
+	
+	double num ; 
 	if (scatter_flag){
-		return distribution(generator);
+		return dis(gen);
 	} else {
 	return(value[0]);
 	}
@@ -335,7 +337,7 @@ double sbr_func_norm (double x, double RHI, double xdx, double vt, double Rs) {
 }
 
 
-double integrate_inf(double RHI,double xdx, double vt, double Rs){
+int integrate_inf(double RHI,double xdx, double vt, double Rs){
 	gsl_integration_workspace * w 
 		= gsl_integration_workspace_alloc (1000);
 
@@ -348,6 +350,7 @@ double integrate_inf(double RHI,double xdx, double vt, double Rs){
  	gsl_integration_qagiu (&F, 0, 1e-12, 1e-6, 1000,
 		w, &result, &error);
 	gsl_integration_workspace_free(w);
+	return 0;
 }
 
 
