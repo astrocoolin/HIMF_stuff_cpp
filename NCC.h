@@ -37,7 +37,6 @@ class Galaxy {
                 	Ropt = rerolled_params.r_Ropt;
                 	vflat = rerolled_params.r_vflat;
                 	alpha = rerolled_params.r_alpha;
-                	dx = rerolled_params.r_dx;
                 	Mag = rerolled_params.r_Mag;
                 	slope = rerolled_params.r_slope;
                 	dist = rerolled_params.r_dist;

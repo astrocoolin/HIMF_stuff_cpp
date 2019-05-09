@@ -283,168 +283,28 @@ double make_vrot(double radi,double Mag,double Ropt,double alpha){
 	return vrot;}
 
 
-struct my_f_params {double RHI; double xdx; double vt; double Rs;};
-
-double f (double x, void * p) {
-	struct my_f_params * params = (struct my_f_params *)p;
-	double RHI = (params->RHI);
-	double xdx = (params->xdx);
-	double vt  = (params->vt);
-	double Rs  = (params->Rs);
-
-	double f1 = exp(- pow((x-0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
-	double f2 = (sqrt(vt/120.0)-1)*exp(-x/Rs);
-
-	double f1_RHI = exp(- pow((RHI-0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
-	double f2_RHI = (sqrt(vt/120.0)-1)*exp(-RHI/Rs);
-	
-	
-	double f = (f1-f2)*x*2.0*3.1415926535;
-	return f;
-}
-
-double sbr_func (double x, double RHI, double xdx, double vt, double Rs) {
-	//struct my_f_params * params = (struct my_f_params *)p;
-	//double RHI = (params->RHI);
-	//double xdx = (params->xdx);
-	//double vt  = (params->vt);
-	//double Rs  = (params->Rs);
-
-	double f1 = exp(- pow((x-  0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
-	double f2 = (sqrt(vt/120.0)-1)*exp(-x  /Rs);
-	
-	double f = (f1-f2);
-
-	return f;
-}
-
-double sbr_func_norm (double x, double RHI, double xdx, double vt, double Rs) {
-	//struct my_f_params * params = (struct my_f_params *)p;
-	//double RHI = (params->RHI);
-	//double xdx = (params->xdx);
-	//double vt  = (params->vt);
-	//double Rs  = (params->Rs);
-
-	double f1 = exp(- pow((x-  0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
-	double f2 = (sqrt(vt/120.0)-1)*exp(-x  /Rs);
-
-	double f1_RHI = exp(- pow((RHI-0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
-	double f2_RHI = (sqrt(vt/120.0)-1)*exp(-RHI/Rs);
-	
-	double f = (f1-f2)/(f1_RHI-f2_RHI);
-
-	return f;
-}
-
-
-int integrate_inf(double RHI,double xdx, double vt, double Rs){
-	gsl_integration_workspace * w 
-		= gsl_integration_workspace_alloc (1000);
-
-	double result, error;
-	my_f_params alpha = {RHI,xdx,vt,Rs};
-
-	gsl_function F;
-	F.function = &f;
-	F.params = &alpha;
- 	gsl_integration_qagiu (&F, 0, 1e-12, 1e-6, 1000,
-		w, &result, &error);
-	gsl_integration_workspace_free(w);
-	return 0;
-}
-
-
-struct sbr_params { double x_dx; double Mass_guess;};
-
-sbr_params sbr_calc(double RHI,double vt,double Rs,int radi_len,double mass){
-	double x = 0.36;
-	int dx_range = (0.15+0.15)/0.005;
-	double delta[dx_range+1];
-	double Mass_guess[dx_range+1];
-	double Mass_compare[dx_range+1];
-	for (int i=0;i<dx_range+1;i++){
-		delta[i] = i*0.005 - 0.15;
-		Mass_guess[i] = log10(integrate_inf(RHI,delta[i],vt,Rs)
-				*1000.0*1000.0/(sbr_func(RHI,RHI,delta[i],vt,Rs)));
-		Mass_compare[i] = abs(Mass_guess[i] - mass) ;
-	}
-	int j = argmin(Mass_compare,dx_range+1);
-	return {delta[j],Mass_guess[j]};
-}
-
-
-double make_sbr(double radi,double xdx, double RHI,double vt, double Rs){
-	// Make the surface brightness profile
-	return sbr_func_norm(radi, RHI, xdx, vt, Rs)
-		*1.24756e+20/(6.0574E5*1.823E18*(2.*3.1415926535/log(256.)));
-}
-
-double make_z(double radi,double vrot,double sigma){
-	return  sigma / ( sqrt(2./3.) * vrot/radi);
-}
-
 struct Galaxy_params {
         double r_MHI, r_DHI, r_Mstar, r_Ropt, r_vflat, r_alpha;
-        double r_dx, r_Mag, r_slope, r_dist, r_beams;} ;
+        double r_Mag, r_slope, r_dist, r_beams;} ;
 
 Galaxy_params setup_relations(double mass,double beams, double beam, double ring_thickness, bool scatter) {
 
 	double MHI = pow(10.0,mass);
 	double DHI = DHI_calc(MHI,scatter) ;
 	double Mstar = Mstar_calc(MHI,scatter);
-	//cout << log10(Mstar) << " Mstar" << endl;
+	//
 	double vflat = BTFR(Mstar + 1.4*MHI,scatter);
 	double Rs = (DHI/2.0) * 0.18;
 	double Ropt = Ropt_calc(vflat,scatter);
 	Mag_params Mag_stuff = Mag_calc(vflat,Ropt,DHI/2.0,Mstar,scatter);
 	double Mag = Mag_stuff.Mag;
-	//cout << Mag << " Mag" << endl;
+	//
 	double alpha = Mag_stuff.alpha;
 	double slope  = Mag_stuff.slope;
 	double dist = DHI * (206265./(beam*beams));
 	double delta = arcsec_to_rad(ring_thickness)*dist;
-
-	int radi_len = (DHI+delta) /delta;
-	double radi[radi_len+1];
-	double vrot[radi_len+1];
-	double  sbr[radi_len+1];
-	double  z[radi_len+1];
 	
-	/*
-	for ( int i=0; i <= radi_len;i++){
-		radi[i] = i*delta;
-	}
-	*/
-	int index;
-	for ( double i=DHI; i >= 0;i-=delta){
-		index = i/delta+1;
-		radi[index] = i;
-	}
-	sbr_params sbr_stuff = sbr_calc(DHI/2.0,vflat,Rs,radi_len,mass);
-	// cout << vflat << " vflat "<< slope << " slope "<<endl;
-	double Vdisp = 2.0;
-	radi[0] = 0.0;
-	//ofstream myfile;
-	//myfile.open("poop.txt",ios::trunc | ios::out);
-	//myfile << "radi" << " " <<" vrot " << " "<< "sbr" <<" " << "z " << endl; 
-	for (int i =0;i <= radi_len;i++){
-		vrot[i] = make_vrot(radi[i],Mag,Ropt,alpha);
-		//sbr[i]	= make_sbr(radi[i],0.03,DHI/2.0,vflat,Rs);
-		sbr[i] = make_sbr(radi[i],sbr_stuff.x_dx,DHI/2.0,vflat,Rs);
-		if (i!=0){
-			z[i]=make_z(radi[i],vrot[i],Vdisp);
-
-		}
-		else	z[i]=make_z(radi[1],vrot[1],Vdisp);
-		radi[i] = radi[i] / dist * 3600.0 * (180.0/3.14159265359);
-		//myfile << radi[i] << " " << vrot[i] << " " << sbr[i] << " "<< z[i]<< endl;
-	}
-	double sigma = 0.36*(DHI/2.0)+0.05;
-	//return {MHI, DHI, Mstar, Ropt, vflat, alpha,0.03, Mag,slope,dist,beams};
-	return {MHI, DHI, Mstar, Ropt, vflat, alpha,sbr_stuff.x_dx, Mag,slope,dist,beams};
-	//myfile.close();
-
-	//deffile_print(radi,vrot,sbr,z,radi_len,inclination);
+	return {MHI, DHI, Mstar, Ropt, vflat, alpha, Mag,slope,dist,beams};
 
 }
 

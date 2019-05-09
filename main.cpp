@@ -36,9 +36,15 @@ int main() {
 	myfile << "MHI "<< "DHI " << "Mstar "<< "vflat " << "alpha "  <<  "Mag " << "dist_MPC "  << "beams" << endl;
 	//for (i=0; i < 125321; i++){
 	#pragma omp parallel num_threads(4)
+	double V;
+	double D;
+	double N;
+	double mass;
+	double prob;
 	#pragma omp for
 	//for (i=0; i < 1006971; i++){
-	for (i=0; i < 10000; i++){
+	for (i=0; i < 456971934; i++){
+	//for (i=0; i < 10000; i++){
 		bool keep = true;
 		while (keep) {
 			double V = pow(((c/H) * (pow((1.0+z),2.0)-1.0)/(pow((1.0+z),2.0)+1.0)),3.0) ;
