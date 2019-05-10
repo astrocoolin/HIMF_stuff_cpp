@@ -28,7 +28,7 @@ double error_spread(double value[2], bool scatter_flag) {
         mt19937 gen(rd());
 	normal_distribution<double> dis(value[0],value[1]);
 	
-	double num ; 
+	//double num ; 
 	if (scatter_flag){
 		return dis(gen);
 	} else {
@@ -226,9 +226,9 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar,bool scat
 		int ind = argmin(vrot_compare,Mag_length);
 		Mag_guess = Mag[ind];
 		// cout << Mag_guess << endl;
-		double vt_guess = vt[ind];
+		//double vt_guess = vt[ind];
 		double rt_guess = rt[ind];
-		double vt_0_guess = vt_0[ind];
+		//double vt_0_guess = vt_0[ind];
 		double a_guess[guess_a];
 		double slope1[guess_a];
 		double slope2[guess_a];
@@ -294,7 +294,7 @@ Galaxy_params setup_relations(double mass,double beams, double beam, double ring
 	double Mstar = Mstar_calc(MHI,scatter);
 	//
 	double vflat = BTFR(Mstar + 1.4*MHI,scatter);
-	double Rs = (DHI/2.0) * 0.18;
+	//double Rs = (DHI/2.0) * 0.18;
 	double Ropt = Ropt_calc(vflat,scatter);
 	Mag_params Mag_stuff = Mag_calc(vflat,Ropt,DHI/2.0,Mstar,scatter);
 	double Mag = Mag_stuff.Mag;
@@ -302,7 +302,7 @@ Galaxy_params setup_relations(double mass,double beams, double beam, double ring
 	double alpha = Mag_stuff.alpha;
 	double slope  = Mag_stuff.slope;
 	double dist = DHI * (206265./(beam*beams));
-	double delta = arcsec_to_rad(ring_thickness)*dist;
+	// double delta = arcsec_to_rad(ring_thickness)*dist;
 	
 	return {MHI, DHI, Mstar, Ropt, vflat, alpha, Mag,slope,dist,beams};
 
