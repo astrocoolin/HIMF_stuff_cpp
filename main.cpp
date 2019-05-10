@@ -36,24 +36,24 @@ int main() {
 	myfile << "MHI "<< "DHI " << "Mstar "<< "vflat " << "alpha "  <<  "Mag " << "dist_MPC "  << "beams" << endl;
 	//for (i=0; i < 125321; i++){
 	#pragma omp parallel num_threads(4)
+	double V;
+	double D;
+	double N;
+	double mass;
+	double prob;
 	#pragma omp for
 	//for (i=0; i < 1006971; i++){
 	for (i=0; i < 456971934; i++){
 	//for (i=0; i < 10000; i++){
 		bool keep = true;
-		double V;
-		double D;
-		double N;
-		double mass;
-		double prob;
 		while (keep) {
-			V = pow(((c/H) * (pow((1.0+z),2.0)-1.0)/(pow((1.0+z),2.0)+1.0)),3.0) ;
-			D = pow(uniform_random(V) , 1.0/3.0)*1000.0 ;
+			double V = pow(((c/H) * (pow((1.0+z),2.0)-1.0)/(pow((1.0+z),2.0)+1.0)),3.0) ;
+			double D = pow(uniform_random(V) , 1.0/3.0)*1000.0 ;
 
-			N = uniform_random(0.11);
-			mass = uniform_random(4.0)+7.0;
+			double N = uniform_random(0.11);
+			double mass = uniform_random(4.0)+7.0;
 
-			prob = HIMF_phi(mass,9.96,-1.33,4.8E-3) ; 
+			double prob = HIMF_phi(mass,9.96,-1.33,4.8E-3) ; 
 			//cout << prob << endl;
 			if (N < prob){
 				keep = false;
