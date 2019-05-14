@@ -41,6 +41,7 @@ class Galaxy {
                 	slope = rerolled_params.r_slope;
                 	dist = rerolled_params.r_dist;
 			beams = rerolled_params.r_beams;
+			dx = rerolled_params.r_dx;
 			// cout << log10(MHI) << " poop" << endl;
 		}
 

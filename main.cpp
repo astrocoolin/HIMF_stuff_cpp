@@ -4,7 +4,7 @@
 #include <math.h>
 #include <random>
 #include <algorithm>
-//#include <gsl/gsl_integration.h>
+#include <gsl/gsl_integration.h>
 #include "NCC.h"
 
 using namespace std;
@@ -36,7 +36,7 @@ int main() {
 	ofstream myfile;
 	myfile.open("Glist.txt", ios::trunc | ios::out);
 	myfile << "MHI "<< "DHI " << "Mstar "<< "vflat " << 
-		"alpha "  << "Ropt " <<  "Mag " << "dist_MPC "  << "beams" << endl;
+		"alpha "  << "Ropt " <<  "Mag " << "dist_MPC " << " dx " << "beams" << endl;
 	#pragma omp parallel num_threads(8)
 	{
 	random_device rd;
@@ -77,7 +77,7 @@ int main() {
 					log10(one.Mstar) << " "<< " "<< one.vflat << 
 					" "<< one.alpha  << " "<< one.Ropt  << " "<< 
 					one.Mag << " "<< one.dist/1000.  << " "<< 
-					one.beams << " " << endl;}
+					one.dx << " " << one.beams << " " << endl;}
 				}
 			}
 		}
