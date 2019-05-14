@@ -36,7 +36,7 @@ int main() {
 	ofstream myfile;
 	myfile.open("Glist.txt", ios::trunc | ios::out);
 	myfile << "MHI "<< "DHI " << "Mstar "<< "vflat " << 
-		"alpha "  <<  "Mag " << "dist_MPC "  << "beams" << endl;
+		"alpha "  << "Ropt " <<  "Mag " << "dist_MPC "  << "beams" << endl;
 	#pragma omp parallel num_threads(8)
 	{
 	random_device rd;
@@ -75,8 +75,9 @@ int main() {
 				#pragma omp critical
 				{myfile << log10(one.MHI) << " "<< one.DHI <<" " << 
 					log10(one.Mstar) << " "<< " "<< one.vflat << 
-					" "<< one.alpha  <<  " "<< one.Mag << " "<< 
-					one.dist/1000.  << " "<< one.beams << " " << endl;}
+					" "<< one.alpha  << " "<< one.Ropt  << " "<< 
+					one.Mag << " "<< one.dist/1000.  << " "<< 
+					one.beams << " " << endl;}
 				}
 			}
 		}
