@@ -123,8 +123,8 @@ double Ropt_calc(double vflat, bool scatter_flag) {
         double slope = error_spread(in_slope,scatter_flag);
 
 	double Ropt = constant + slope * log10(vflat);
-	double spread[2] = {Ropt,scatr};
-	Ropt = error_spread(spread,scatter_flag);
+	//double spread[2] = {Ropt,scatr};
+	//Ropt = error_spread(spread,scatter_flag);
 
 	return h*pow(10.0,Ropt);
 
@@ -311,6 +311,53 @@ double sbr_func (double x, double RHI, double xdx, double vt, double Rs) {
 	return f;
 }
 
+double sbr_func_f (double x, void * p) {
+	struct my_f_params * params = (struct my_f_params *)p;
+	double RHI = (params->RHI);
+	double xdx = (params->xdx);
+	double vt  = (params->vt);
+	double Rs  = (params->Rs);
+
+	double f1 = exp(- pow((x-  0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
+	double f2 = (sqrt(vt/120.0)-1)*exp(-x  /Rs);
+
+	double f = (f1-f2)/sbr_func(RHI,RHI,xdx,vt,Rs) - 0.5;
+
+	return f;
+}
+
+
+double find_halfmass (double RHI,double xdx, double vt, double Rs){
+	int i, status;
+	gsl_root_fsolver *workspace_f;
+	double x, x_l, x_r;
+
+	workspace_f = gsl_root_fsolver_alloc(gsl_root_fsolver_bisection);
+	my_f_params beta = {RHI,xdx,vt,Rs};
+	
+	gsl_function F;
+	F.function = &sbr_func_f;
+	F.params = &beta;
+	x_l = RHI;
+	x_r = RHI*2.0;
+
+	gsl_root_fsolver_set(workspace_f, &F, x_l, x_r);
+
+	for(i = 0; i < 15; i++){
+		status = gsl_root_fsolver_iterate(workspace_f);
+
+		x_l = gsl_root_fsolver_x_lower(workspace_f);
+        	x_r = gsl_root_fsolver_x_upper(workspace_f);
+
+        	status = gsl_root_test_interval(x_l, x_r, 1.0e-13, 1.0e-20);
+        	if(status != GSL_CONTINUE){break; }
+	}
+	gsl_root_fsolver_free(workspace_f);
+	x = (x_r+x_l)/2.0;
+	//cout << x_r << " " << x_l << endl;
+	return x;
+}
+
 double integrate_inf(double RHI,double xdx, double vt, double Rs){
 	gsl_integration_workspace * w
 		= gsl_integration_workspace_alloc (1000);
@@ -350,7 +397,7 @@ sbr_params sbr_calc(double RHI,double vt,double Rs,int radi_len,double mass){
 
 struct Galaxy_params {
         double r_MHI, r_DHI, r_Mstar, r_Ropt, r_vflat, r_alpha;
-        double r_dx, r_Mag, r_slope, r_dist, r_beams;} ;
+        double r_dx, r_Mag, r_RHI5, r_slope, r_dist, r_beams;} ;
 
 Galaxy_params setup_relations(double mass,double beams, double beam, double ring_thickness, bool scatter) {
 
@@ -371,9 +418,11 @@ Galaxy_params setup_relations(double mass,double beams, double beam, double ring
 	double delta = arcsec_to_rad(ring_thickness)*dist;
 	int radi_len = (DHI+delta) /delta;
 	sbr_params sbr_stuff = sbr_calc(DHI/2.0,vflat,Rs,radi_len,mass);
+	double RHI5 =  find_halfmass(DHI/2.0,sbr_stuff.x_dx,vflat,Rs);
+	// my_f_params beta = {DHI/2.0,sbr_stuff.x_dx,vflat,Rs};
 	// double delta = arcsec_to_rad(ring_thickness)*dist;
 	
-	return {MHI, DHI, Mstar, Ropt, vflat, alpha, sbr_stuff.x_dx, Mag,slope,dist,beams};
+	return {MHI, DHI, Mstar, Ropt, vflat, alpha, sbr_stuff.x_dx, Mag, RHI5,slope,dist,beams};
 
 }
 

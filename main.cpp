@@ -5,6 +5,8 @@
 #include <random>
 #include <algorithm>
 #include <gsl/gsl_integration.h>
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_roots.h>
 #include "NCC.h"
 
 using namespace std;
@@ -36,8 +38,9 @@ int main() {
 	ofstream myfile;
 	myfile.open("Glist.txt", ios::trunc | ios::out);
 	myfile << "MHI "<< "DHI " << "Mstar "<< "vflat " << 
-		"alpha "  << "Ropt " <<  "Mag " << "dist_MPC " << " dx " << "beams" << endl;
-	#pragma omp parallel num_threads(8)
+		"alpha "  << "Ropt " <<  "Mag " << " RHI5 " <<
+		"dist_MPC " << " dx " << "beams" << endl;
+	#pragma omp parallel num_threads(4)
 	{
 	random_device rd;
 	mt19937 gen(rd());
@@ -56,7 +59,7 @@ int main() {
 	#pragma omp for
 	//for (i=0; i < 1006971; i++){
 	//for (i=0; i < 456971934; i++){
-	for (i=0; i < 10000; i++){
+	for (i=0; i < 1000; i++){
 		keep = true;
 		while (keep) {
 			D = pow(dis(gen)*Vmax , 1.0/3.0)*1000.0 ;
@@ -76,8 +79,9 @@ int main() {
 				{myfile << log10(one.MHI) << " "<< one.DHI <<" " << 
 					log10(one.Mstar) << " "<< " "<< one.vflat << 
 					" "<< one.alpha  << " "<< one.Ropt  << " "<< 
-					one.Mag << " "<< one.dist/1000.  << " "<< 
-					one.dx << " " << one.beams << " " << endl;}
+					one.Mag << " " << one.RHI5 << " "<< 
+					one.dist/1000.  << " "<< one.dx << " " << 
+					one.beams << " " << endl;}
 				}
 			}
 		}
