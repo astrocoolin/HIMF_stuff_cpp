@@ -127,8 +127,21 @@ double Ropt_calc(double vflat, bool scatter_flag) {
 	//Ropt = error_spread(spread,scatter_flag);
 
 	return h*pow(10.0,Ropt);
-
 }
+
+double Ropt_D_calc(double DHI, bool scatter_flag) {
+	// Broeils & Rhee
+	// Optical Radius (R25) - DHI relationship
+	// https://ui.adsabs.harvard.edu/abs/1997A%26A...324..877B/abstract
+	
+	double spread[2] = {1.7,1.5};
+	double scatr = error_spread(spread,scatter_flag);
+	//Ropt = error_spread(spread,scatter_flag);
+	double Ropt = DHI /1.7;
+
+	return Ropt;
+}
+
 
 double V0_func(double x){
 	// best fitting parameters for V0
@@ -407,7 +420,7 @@ Galaxy_params setup_relations(double mass,double beams, double beam, double ring
 	//
 	double vflat = BTFR(Mstar + 1.4*MHI,scatter);
 	double Rs = (DHI/2.0) * 0.18;
-	double Ropt = Ropt_calc(vflat,scatter);
+	double Ropt = Ropt_D_calc(DHI,scatter);
 	Mag_params Mag_stuff = Mag_calc(vflat,Ropt,DHI/2.0,Mstar,scatter);
 
 	double Mag = Mag_stuff.Mag;
