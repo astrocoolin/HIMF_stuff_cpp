@@ -200,11 +200,13 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar,bool scat
 	double a[Mag_length];
 	double a_temp;
 	double Mag_guess;
+	double slope_temp;
 
 	// Set slope from NIHAO 17
 	double slope_sparc = 0.123 - 0.137*(log10(mstar)-9.471) ;
 	double spread[2] = {slope_sparc,0.19};
 	slope_sparc = error_spread(spread,scatter_flag);
+	int jay= 0; 
 
 	double x1,x2;
 	
@@ -266,12 +268,18 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar,bool scat
 		}
 		for (int i=0; i<= guess_a;i++) {
 			slope_sparc_arr[i]=abs(slope_sparc-slope[i]);
-
+			cout << i << " "<< slope_sparc << " " <<slope[i] << endl;
 		}
 		a_temp = a_guess[argmin(slope_sparc_arr,guess_a)];
+		jay = argmin(slope_sparc_arr,guess_a);
+		slope_temp = slope[jay];
+
+		//cout << jay << endl;
+
 		if (argmin(slope_sparc_arr,guess_a) == 0) { a_temp = a_guess[1]; } 
 		if (a_temp < 0) { a_temp = 0; }
 	}
+	cout <<RHI<<" " << jay << " JaY " << slope_temp << " " << slope_sparc << endl;
 	return {Mag_guess,a_temp,slope_sparc};
 }
 
@@ -430,8 +438,10 @@ Galaxy_params setup_relations(double mass,double beams, double beam, double ring
 	double dist = DHI * (206265./(beam*beams));
 	double delta = arcsec_to_rad(ring_thickness)*dist;
 	int radi_len = (DHI+delta) /delta;
+
 	sbr_params sbr_stuff = sbr_calc(DHI/2.0,vflat,Rs,radi_len,mass);
 	double RHI5 =  find_halfmass(DHI/2.0,sbr_stuff.x_dx,vflat,Rs);
+
 	// my_f_params beta = {DHI/2.0,sbr_stuff.x_dx,vflat,Rs};
 	// double delta = arcsec_to_rad(ring_thickness)*dist;
 	
