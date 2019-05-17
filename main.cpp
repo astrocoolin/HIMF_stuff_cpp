@@ -39,7 +39,7 @@ int main() {
 	myfile.open("Glist.txt", ios::trunc | ios::out);
 	myfile << "MHI "<< "DHI " << "Mstar "<< "vflat " << 
 		"alpha "  << "Ropt " <<  "Mag " << " RHI5 " <<
-		"dist_MPC " << " dx " << "beams" << endl;
+		" slope "<< "dist_MPC " << " dx " << "beams" << endl;
 	//#pragma omp parallel num_threads(4)
 	{
 	random_device rd;
@@ -59,7 +59,7 @@ int main() {
 	//#pragma omp for
 	//for (i=0; i < 1006971; i++){
 	//for (i=0; i < 456971934; i++){
-	for (i=0; i < 1; i++){
+	for (i=0; i < 1000; i++){
 		keep = true;
 		while (keep) {
 			D = pow(dis(gen)*Vmax , 1.0/3.0)*1000.0 ;
@@ -79,8 +79,8 @@ int main() {
 				{myfile << log10(one.MHI) << " "<< one.DHI <<" " << 
 					log10(one.Mstar) << " "<< " "<< one.vflat << 
 					" "<< one.alpha  << " "<< one.Ropt  << " "<< 
-					one.Mag << " " << one.RHI5 << " "<< 
-					one.dist/1000.  << " "<< one.dx << " " << 
+					one.Mag << " " << one.RHI5 << " "<< one.slope <<
+					" " << one.dist/1000.  << " "<< one.dx << " " << 
 					one.beams << " " << endl;}
 				}
 			}

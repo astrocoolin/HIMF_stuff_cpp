@@ -268,18 +268,18 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar,bool scat
 		}
 		for (int i=0; i<= guess_a;i++) {
 			slope_sparc_arr[i]=abs(slope_sparc-slope[i]);
-			cout << i << " "<< slope_sparc << " " <<slope[i] << endl;
+			//cout << i << " "<< slope_sparc << " " <<slope[i] << endl;
 		}
 		a_temp = a_guess[argmin(slope_sparc_arr,guess_a)];
-		jay = argmin(slope_sparc_arr,guess_a);
-		slope_temp = slope[jay];
+		//jay = argmin(slope_sparc_arr,guess_a);
+		//slope_temp = slope[jay];
 
 		//cout << jay << endl;
 
 		if (argmin(slope_sparc_arr,guess_a) == 0) { a_temp = a_guess[1]; } 
 		if (a_temp < 0) { a_temp = 0; }
 	}
-	cout <<RHI<<" " << jay << " JaY " << slope_temp << " " << slope_sparc << endl;
+	//cout <<RHI<<" " << jay << " JaY " << slope_temp << " " << slope_sparc << endl;
 	return {Mag_guess,a_temp,slope_sparc};
 }
 
@@ -428,7 +428,7 @@ Galaxy_params setup_relations(double mass,double beams, double beam, double ring
 	//
 	double vflat = BTFR(Mstar + 1.4*MHI,scatter);
 	double Rs = (DHI/2.0) * 0.18;
-	double Ropt = Ropt_D_calc(DHI,scatter);
+	double Ropt = Ropt_D_calc(DHI/2.,scatter);
 	Mag_params Mag_stuff = Mag_calc(vflat,Ropt,DHI/2.0,Mstar,scatter);
 
 	double Mag = Mag_stuff.Mag;
