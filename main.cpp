@@ -59,7 +59,7 @@ int main() {
 	//#pragma omp for
 	//for (i=0; i < 1006971; i++){
 	//for (i=0; i < 456971934; i++){
-	for (i=0; i < 1000; i++){
+	for (i=0; i < 1; i++){
 		keep = true;
 		while (keep) {
 			D = pow(dis(gen)*Vmax , 1.0/3.0)*1000.0 ;

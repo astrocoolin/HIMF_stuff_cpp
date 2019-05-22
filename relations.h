@@ -109,6 +109,22 @@ double BTFR(double Mbar, bool scatter_flag) {
 	return pow(10.0,logv);
 }
 
+double BTFR_2(double Mbar, bool scatter_flag) {
+	// Lelli et al 2016
+	// Baryonic Tully-Fisher relationship
+	// http://adsabs.harvard.edu/abs/2016ApJ...816L..14L
+	
+	double in_slope[2] = {3.75,0.11};
+	double in_constant[2] = {2.18,0.23};
+
+	double constant = error_spread(in_constant,scatter_flag);
+	double slope = error_spread(in_slope,scatter_flag);
+
+	double logv = (log10(Mbar) + constant)/slope;
+
+	return pow(10.0,logv);
+}
+
 double Ropt_calc(double vflat, bool scatter_flag) {
 	// Saintonge et al 2007
 	// Optical Radius (r83) - Vflat Relationship
@@ -271,15 +287,15 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar,bool scat
 			//cout << i << " "<< slope_sparc << " " <<slope[i] << endl;
 		}
 		a_temp = a_guess[argmin(slope_sparc_arr,guess_a)];
-		//jay = argmin(slope_sparc_arr,guess_a);
-		//slope_temp = slope[jay];
+		jay = argmin(slope_sparc_arr,guess_a);
+		slope_temp = slope[jay];
 
 		//cout << jay << endl;
 
 		if (argmin(slope_sparc_arr,guess_a) == 0) { a_temp = a_guess[1]; } 
 		if (a_temp < 0) { a_temp = 0; }
 	}
-	//cout <<RHI<<" " << jay << " JaY " << slope_temp << " " << slope_sparc << endl;
+	cout <<RHI<<" " << jay << " JaY " << slope_temp << " " << slope_sparc << " " << a_temp << endl;
 	return {Mag_guess,a_temp,slope_sparc};
 }
 
@@ -426,7 +442,7 @@ Galaxy_params setup_relations(double mass,double beams, double beam, double ring
 	double DHI = DHI_calc(MHI,scatter) ;
 	double Mstar = Mstar_calc(MHI,scatter);
 	//
-	double vflat = BTFR(Mstar + 1.4*MHI,scatter);
+	double vflat = BTFR_2(Mstar + 1.4*MHI,scatter);
 	double Rs = (DHI/2.0) * 0.18;
 	double Ropt = Ropt_D_calc(DHI/2.,scatter);
 	Mag_params Mag_stuff = Mag_calc(vflat,Ropt,DHI/2.0,Mstar,scatter);
