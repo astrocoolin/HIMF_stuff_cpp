@@ -40,7 +40,7 @@ int main() {
 	myfile << "MHI "<< "DHI " << "Mstar "<< "vflat " << 
 		"alpha "  << "Ropt " <<  "Mag " << " RHI5 " <<
 		" slope "<< "dist_MPC " << " dx " << "beams" << endl;
-	//#pragma omp parallel num_threads(4)
+	#pragma omp parallel num_threads(8)
 	{
 	random_device rd;
 	mt19937 gen(rd());
@@ -56,10 +56,10 @@ int main() {
 
 	Galaxy one;
 
-	//#pragma omp for
-	//for (i=0; i < 1006971; i++){
+	#pragma omp for
+	for (i=0; i < 1006971; i++){
 	//for (i=0; i < 456971934; i++){
-	for (i=0; i < 1; i++){
+	//for (i=0; i < 1; i++){
 		keep = true;
 		while (keep) {
 			D = pow(dis(gen)*Vmax , 1.0/3.0)*1000.0 ;
@@ -75,7 +75,7 @@ int main() {
 				one.reroll(mass,10.0,false);
 				one.calc_dist(D);
 				if (one.beams > 0.0) {
-	//			#pragma omp critical
+				#pragma omp critical
 				{myfile << log10(one.MHI) << " "<< one.DHI <<" " << 
 					log10(one.Mstar) << " "<< " "<< one.vflat << 
 					" "<< one.alpha  << " "<< one.Ropt  << " "<< 

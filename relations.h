@@ -120,7 +120,7 @@ double BTFR_2(double Mbar, bool scatter_flag) {
 	double constant = error_spread(in_constant,scatter_flag);
 	double slope = error_spread(in_slope,scatter_flag);
 
-	double logv = (log10(Mbar) + constant)/slope;
+	double logv = (log10(Mbar) - constant)/slope;
 
 	return pow(10.0,logv);
 }
