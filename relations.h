@@ -145,7 +145,7 @@ double BTFR(double Mbar, bool scatter_flag) {
 	return pow(10.0,logv);
 }
 
-double BTFR_2(double Mbar, bool scatter_flag) {
+double BTFR_2_1(double Mbar, bool scatter_flag) {
 	// Lelli et al 2016
 	// Baryonic Tully-Fisher relationship
 	// http://adsabs.harvard.edu/abs/2016ApJ...816L..14L
@@ -156,7 +156,52 @@ double BTFR_2(double Mbar, bool scatter_flag) {
 	double constant = error_spread(in_constant,scatter_flag);
 	double slope = error_spread(in_slope,scatter_flag);
 
-	double logv = (log10(Mbar) + constant)/slope;
+	double logv = (log10(Mbar) - constant)/slope;
+
+	return pow(10.0,logv);
+}
+double BTFR_2_2(double Mbar, bool scatter_flag) {
+	// Lelli et al 2016
+	// Baryonic Tully-Fisher relationship
+	// http://adsabs.harvard.edu/abs/2016ApJ...816L..14L
+	
+	double in_slope[2] = {3.90,0.11};
+	double in_constant[2] = {1.92,0.23};
+
+	double constant = error_spread(in_constant,scatter_flag);
+	double slope = error_spread(in_slope,scatter_flag);
+
+	double logv = (log10(Mbar) - constant)/slope;
+
+	return pow(10.0,logv);
+}
+double BTFR_2_3(double Mbar, bool scatter_flag) {
+	// Lelli et al 2016
+	// Baryonic Tully-Fisher relationship
+	// http://adsabs.harvard.edu/abs/2016ApJ...816L..14L
+	
+	double in_slope[2] = {3.71,0.11};
+	double in_constant[2] = {2.27,0.23};
+
+	double constant = error_spread(in_constant,scatter_flag);
+	double slope = error_spread(in_slope,scatter_flag);
+
+	double logv = (log10(Mbar) - constant)/slope;
+
+	return pow(10.0,logv);
+}
+double BTFR_2_4(double Mbar, bool scatter_flag) {
+	// Lelli et al 2016
+	// Baryonic Tully-Fisher relationship
+	// http://adsabs.harvard.edu/abs/2016ApJ...816L..14L
+	
+	double in_slope[2] = {3.95,0.11};
+	double in_constant[2] = {1.86,0.23};
+
+	double constant = error_spread(in_constant,scatter_flag);
+	double slope = error_spread(in_slope,scatter_flag);
+
+	double logv = (log10(Mbar) - constant)/slope;
 
 	return pow(10.0,logv);
 }
