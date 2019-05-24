@@ -89,6 +89,42 @@ double Mstar_calc(double MHI, bool scatter_flag) {
 	
 }	
 
+double Mstar_calc_2(double MHI, bool scatter_flag) {
+	// Huang et al 2012
+	// HI Mass - Stellar Mass Relationship 
+	// https://ui.adsabs.harvard.edu/abs/arXiv:1207.0523
+	double in_slope[2] ;
+	double in_constant[2] ; 
+	double scatr[2] ;
+
+	if (MHI  < 9.526) {
+		in_slope[0] = 0.712 ;
+		in_slope[1] = 0.0 ;
+		in_constant[0] = 3.117 ;
+		in_constant[1] = 0.0 ;
+		scatr[0] = 0.0 ;
+		scatr[1] = 0.0 ;
+	} else {
+		in_slope[0] = 0.276 ;
+		in_slope[1] = 0.0 ;
+		in_constant[0] = 7.042 ;
+		in_constant[1] = 0.0 ;
+		scatr[0] = 0.0 ;
+		scatr[1] = 0.0 ;
+	}
+
+	double constant = error_spread(in_constant,scatter_flag);
+	double slope = error_spread(in_slope,scatter_flag);
+	//double scatter = error_spread(scatr,scatter_flag);
+
+	double Mstar = MHI/slope-constant/slope;
+	//double spread[2] = {Mstar,scatter};
+
+	return pow(10.0,Mstar);
+	
+}	
+
+
 double BTFR(double Mbar, bool scatter_flag) {
 	// Bradford et al 2015, Fig 6
 	// Baryonic Tully-Fisher relationship
@@ -440,7 +476,7 @@ Galaxy_params setup_relations(double mass,double beams, double beam, double ring
 
 	double MHI = pow(10.0,mass);
 	double DHI = DHI_calc(MHI,scatter) ;
-	double Mstar = Mstar_calc(MHI,scatter);
+	double Mstar = Mstar_calc_2(MHI,scatter);
 	//
 	double vflat = BTFR_2(Mstar + 1.4*MHI,scatter);
 	double Rs = (DHI/2.0) * 0.18;
