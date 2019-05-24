@@ -97,7 +97,7 @@ double Mstar_calc_2(double MHI, bool scatter_flag) {
 	double in_constant[2] ; 
 	double scatr[2] ;
 
-	if (MHI  < 9.526) {
+	if (log10(MHI)  < 9.526) {
 		in_slope[0] = 0.712 ;
 		in_slope[1] = 0.0 ;
 		in_constant[0] = 3.117 ;
@@ -117,7 +117,7 @@ double Mstar_calc_2(double MHI, bool scatter_flag) {
 	double slope = error_spread(in_slope,scatter_flag);
 	//double scatter = error_spread(scatr,scatter_flag);
 
-	double Mstar = MHI/slope-constant/slope;
+	double Mstar = log10(MHI)/slope-constant/slope;
 	//double spread[2] = {Mstar,scatter};
 
 	return pow(10.0,Mstar);
@@ -376,7 +376,7 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar,bool scat
 		if (argmin(slope_sparc_arr,guess_a) == 0) { a_temp = a_guess[1]; } 
 		if (a_temp < 0) { a_temp = 0; }
 	}
-	cout <<RHI<<" " << jay << " JaY " << slope_temp << " " << slope_sparc << " " << a_temp << endl;
+	//cout <<RHI<<" " << jay << " JaY " << slope_temp << " " << slope_sparc << " " << a_temp << endl;
 	return {Mag_guess,a_temp,slope_sparc};
 }
 
@@ -522,8 +522,9 @@ Galaxy_params setup_relations(double mass,double beams, double beam, double ring
 	double MHI = pow(10.0,mass);
 	double DHI = DHI_calc(MHI,scatter) ;
 	double Mstar = Mstar_calc_2(MHI,scatter);
+	//cout << log10(Mstar) << " "<< log10(MHI)<< endl;
 	//
-	double vflat = BTFR_2(Mstar + 1.4*MHI,scatter);
+	double vflat = BTFR_2_1(Mstar + 1.4*MHI,scatter);
 	double Rs = (DHI/2.0) * 0.18;
 	double Ropt = Ropt_D_calc(DHI/2.,scatter);
 	Mag_params Mag_stuff = Mag_calc(vflat,Ropt,DHI/2.0,Mstar,scatter);
