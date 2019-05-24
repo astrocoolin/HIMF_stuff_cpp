@@ -89,6 +89,42 @@ double Mstar_calc(double MHI, bool scatter_flag) {
 	
 }	
 
+double Mstar_calc_2(double MHI, bool scatter_flag) {
+	// Huang et al 2012
+	// HI Mass - Stellar Mass Relationship 
+	// https://ui.adsabs.harvard.edu/abs/arXiv:1207.0523
+	double in_slope[2] ;
+	double in_constant[2] ; 
+	double scatr[2] ;
+
+	if (MHI  < 9.526) {
+		in_slope[0] = 0.712 ;
+		in_slope[1] = 0.0 ;
+		in_constant[0] = 3.117 ;
+		in_constant[1] = 0.0 ;
+		scatr[0] = 0.0 ;
+		scatr[1] = 0.0 ;
+	} else {
+		in_slope[0] = 0.276 ;
+		in_slope[1] = 0.0 ;
+		in_constant[0] = 7.042 ;
+		in_constant[1] = 0.0 ;
+		scatr[0] = 0.0 ;
+		scatr[1] = 0.0 ;
+	}
+
+	double constant = error_spread(in_constant,scatter_flag);
+	double slope = error_spread(in_slope,scatter_flag);
+	//double scatter = error_spread(scatr,scatter_flag);
+
+	double Mstar = MHI/slope-constant/slope;
+	//double spread[2] = {Mstar,scatter};
+
+	return pow(10.0,Mstar);
+	
+}	
+
+
 double BTFR(double Mbar, bool scatter_flag) {
 	// Bradford et al 2015, Fig 6
 	// Baryonic Tully-Fisher relationship
@@ -109,6 +145,22 @@ double BTFR(double Mbar, bool scatter_flag) {
 	return pow(10.0,logv);
 }
 
+double BTFR_2(double Mbar, bool scatter_flag) {
+	// Lelli et al 2016
+	// Baryonic Tully-Fisher relationship
+	// http://adsabs.harvard.edu/abs/2016ApJ...816L..14L
+	
+	double in_slope[2] = {3.75,0.11};
+	double in_constant[2] = {2.18,0.23};
+
+	double constant = error_spread(in_constant,scatter_flag);
+	double slope = error_spread(in_slope,scatter_flag);
+
+	double logv = (log10(Mbar) + constant)/slope;
+
+	return pow(10.0,logv);
+}
+
 double Ropt_calc(double vflat, bool scatter_flag) {
 	// Saintonge et al 2007
 	// Optical Radius (r83) - Vflat Relationship
@@ -123,12 +175,25 @@ double Ropt_calc(double vflat, bool scatter_flag) {
         double slope = error_spread(in_slope,scatter_flag);
 
 	double Ropt = constant + slope * log10(vflat);
-	double spread[2] = {Ropt,scatr};
-	Ropt = error_spread(spread,scatter_flag);
+	//double spread[2] = {Ropt,scatr};
+	//Ropt = error_spread(spread,scatter_flag);
 
 	return h*pow(10.0,Ropt);
-
 }
+
+double Ropt_D_calc(double DHI, bool scatter_flag) {
+	// Broeils & Rhee
+	// Optical Radius (R25) - DHI relationship
+	// https://ui.adsabs.harvard.edu/abs/1997A%26A...324..877B/abstract
+	
+	double spread[2] = {1.7,1.5};
+	double scatr = error_spread(spread,scatter_flag);
+	//Ropt = error_spread(spread,scatter_flag);
+	double Ropt = DHI /1.7;
+
+	return Ropt;
+}
+
 
 double V0_func(double x){
 	// best fitting parameters for V0
@@ -187,11 +252,13 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar,bool scat
 	double a[Mag_length];
 	double a_temp;
 	double Mag_guess;
+	double slope_temp;
 
 	// Set slope from NIHAO 17
 	double slope_sparc = 0.123 - 0.137*(log10(mstar)-9.471) ;
 	double spread[2] = {slope_sparc,0.19};
 	slope_sparc = error_spread(spread,scatter_flag);
+	int jay= 0; 
 
 	double x1,x2;
 	
@@ -215,7 +282,6 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar,bool scat
 		// Calculate rotation velocities at Ropt for all vt_0, rt
 		for (int i=0; i<= Mag_length;i++){
 			vt[i] = vt_0[i] * (1.0 - exp(-Ropt/rt[i])) * (1.0 + a[i] * Ropt/rt[i]);
-			//if (abs(vt[i] - vrot) < 0.1) {cout << vt[i] << " " << vrot << " " << i << " " << Mag[i] << " " << a[i] << " " << rt[i] << " " << vt_0[i] << " " << Ropt << endl;}
 		}
 		
 		for (int i=0; i<= Mag_length;i++) {vrot_compare[i] = abs(vrot - vt[i]); }
@@ -225,10 +291,7 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar,bool scat
 		// that matches the Magnitude
 		int ind = argmin(vrot_compare,Mag_length);
 		Mag_guess = Mag[ind];
-		// cout << Mag_guess << endl;
-		//double vt_guess = vt[ind];
 		double rt_guess = rt[ind];
-		//double vt_0_guess = vt_0[ind];
 		double a_guess[guess_a];
 		double slope1[guess_a];
 		double slope2[guess_a];
@@ -257,14 +320,18 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar,bool scat
 		}
 		for (int i=0; i<= guess_a;i++) {
 			slope_sparc_arr[i]=abs(slope_sparc-slope[i]);
-			//cout << slope[i] << " slope " << slope_sparc << " target " << a_guess[i] << "a guess "<< endl;
-
+			//cout << i << " "<< slope_sparc << " " <<slope[i] << endl;
 		}
 		a_temp = a_guess[argmin(slope_sparc_arr,guess_a)];
+		jay = argmin(slope_sparc_arr,guess_a);
+		slope_temp = slope[jay];
+
+		//cout << jay << endl;
+
 		if (argmin(slope_sparc_arr,guess_a) == 0) { a_temp = a_guess[1]; } 
 		if (a_temp < 0) { a_temp = 0; }
 	}
-	// cout << slope_sparc << "poo poo" << slope[argmin(slope_sparc_arr,guess_a)] << endl;
+	cout <<RHI<<" " << jay << " JaY " << slope_temp << " " << slope_sparc << " " << a_temp << endl;
 	return {Mag_guess,a_temp,slope_sparc};
 }
 
@@ -282,29 +349,155 @@ double make_vrot(double radi,double Mag,double Ropt,double alpha){
 
 	return vrot;}
 
+	struct my_f_params {double RHI; double xdx; double vt; double Rs;};
+
+double f (double x, void * p) {
+	struct my_f_params * params = (struct my_f_params *)p;
+	double RHI = (params->RHI);
+	double xdx = (params->xdx);
+	double vt  = (params->vt);
+	double Rs  = (params->Rs);
+
+	double f1 = exp(- pow((x-0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
+	double f2 = (sqrt(vt/120.0)-1)*exp(-x/Rs);
+
+	//double f1_RHI = exp(- pow((RHI-0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
+	//double f2_RHI = (sqrt(vt/120.0)-1)*exp(-RHI/Rs);
+
+
+	double f = (f1-f2)*x*2.0*3.1415926535;
+	return f;
+}
+
+double sbr_func (double x, double RHI, double xdx, double vt, double Rs) {
+	//struct my_f_params * params = (struct my_f_params *)p;
+	//double RHI = (params->RHI);
+	//double xdx = (params->xdx);
+	//double vt  = (params->vt);
+	//double Rs  = (params->Rs);
+
+	double f1 = exp(- pow((x-  0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
+	double f2 = (sqrt(vt/120.0)-1)*exp(-x  /Rs);
+
+	double f = (f1-f2);
+
+	return f;
+}
+
+double sbr_func_f (double x, void * p) {
+	struct my_f_params * params = (struct my_f_params *)p;
+	double RHI = (params->RHI);
+	double xdx = (params->xdx);
+	double vt  = (params->vt);
+	double Rs  = (params->Rs);
+
+	double f1 = exp(- pow((x-  0.4*RHI)/(sqrt(2.0)*(xdx+0.36)*RHI),2));
+	double f2 = (sqrt(vt/120.0)-1)*exp(-x  /Rs);
+
+	double f = (f1-f2)/sbr_func(RHI,RHI,xdx,vt,Rs) - 0.5;
+
+	return f;
+}
+
+
+double find_halfmass (double RHI,double xdx, double vt, double Rs){
+	int i, status;
+	gsl_root_fsolver *workspace_f;
+	double x, x_l, x_r;
+
+	workspace_f = gsl_root_fsolver_alloc(gsl_root_fsolver_bisection);
+	my_f_params beta = {RHI,xdx,vt,Rs};
+	
+	gsl_function F;
+	F.function = &sbr_func_f;
+	F.params = &beta;
+	x_l = RHI;
+	x_r = RHI*2.0;
+
+	gsl_root_fsolver_set(workspace_f, &F, x_l, x_r);
+
+	for(i = 0; i < 15; i++){
+		status = gsl_root_fsolver_iterate(workspace_f);
+
+		x_l = gsl_root_fsolver_x_lower(workspace_f);
+        	x_r = gsl_root_fsolver_x_upper(workspace_f);
+
+        	status = gsl_root_test_interval(x_l, x_r, 1.0e-13, 1.0e-20);
+        	if(status != GSL_CONTINUE){break; }
+	}
+	gsl_root_fsolver_free(workspace_f);
+	x = (x_r+x_l)/2.0;
+	//cout << x_r << " " << x_l << endl;
+	return x;
+}
+
+double integrate_inf(double RHI,double xdx, double vt, double Rs){
+	gsl_integration_workspace * w
+		= gsl_integration_workspace_alloc (1000);
+
+	double result, error;
+	my_f_params alpha = {RHI,xdx,vt,Rs};
+
+	gsl_function F;
+	F.function = &f;
+	F.params = &alpha;
+ 	gsl_integration_qagiu (&F, 0, 1e-12, 1e-6, 1000,
+		w, &result, &error);
+	//cout << result << " Result" << endl;
+	gsl_integration_workspace_free(w);
+	return result;
+}
+
+
+struct sbr_params { double x_dx; double Mass_guess;};
+
+sbr_params sbr_calc(double RHI,double vt,double Rs,int radi_len,double mass){
+	int dx_range = (0.075+0.075)/0.0005;
+	double delta[dx_range+1];
+	double Mass_guess[dx_range+1];
+	double Mass_compare[dx_range+1];
+	for (int i=0;i<dx_range+1;i++){
+		delta[i] = i*0.0005 - 0.075;
+		Mass_guess[i] = log10(integrate_inf(RHI,delta[i],vt,Rs)
+				*1000.0*1000.0/(sbr_func(RHI,RHI,delta[i],vt,Rs)));
+		Mass_compare[i] = abs(Mass_guess[i] - mass) ;
+		//cout << i <<" " << delta[i] << " " << Mass_guess[i] << " "<< Mass_compare[i] << " " << mass << " " << integrate_inf(RHI,delta[i],vt,Rs) << " " << sbr_func(RHI,RHI,delta[i],vt,Rs) << endl;
+	}
+	int j = argmin(Mass_compare,dx_range+1);
+	return {delta[j],Mass_guess[j]};
+}
+
 
 struct Galaxy_params {
         double r_MHI, r_DHI, r_Mstar, r_Ropt, r_vflat, r_alpha;
-        double r_Mag, r_slope, r_dist, r_beams;} ;
+        double r_dx, r_Mag, r_RHI5, r_slope, r_dist, r_beams;} ;
 
 Galaxy_params setup_relations(double mass,double beams, double beam, double ring_thickness, bool scatter) {
 
 	double MHI = pow(10.0,mass);
 	double DHI = DHI_calc(MHI,scatter) ;
-	double Mstar = Mstar_calc(MHI,scatter);
+	double Mstar = Mstar_calc_2(MHI,scatter);
 	//
-	double vflat = BTFR(Mstar + 1.4*MHI,scatter);
-	//double Rs = (DHI/2.0) * 0.18;
-	double Ropt = Ropt_calc(vflat,scatter);
+	double vflat = BTFR_2(Mstar + 1.4*MHI,scatter);
+	double Rs = (DHI/2.0) * 0.18;
+	double Ropt = Ropt_D_calc(DHI/2.,scatter);
 	Mag_params Mag_stuff = Mag_calc(vflat,Ropt,DHI/2.0,Mstar,scatter);
+
 	double Mag = Mag_stuff.Mag;
 	//
 	double alpha = Mag_stuff.alpha;
 	double slope  = Mag_stuff.slope;
 	double dist = DHI * (206265./(beam*beams));
+	double delta = arcsec_to_rad(ring_thickness)*dist;
+	int radi_len = (DHI+delta) /delta;
+
+	sbr_params sbr_stuff = sbr_calc(DHI/2.0,vflat,Rs,radi_len,mass);
+	double RHI5 =  find_halfmass(DHI/2.0,sbr_stuff.x_dx,vflat,Rs);
+
+	// my_f_params beta = {DHI/2.0,sbr_stuff.x_dx,vflat,Rs};
 	// double delta = arcsec_to_rad(ring_thickness)*dist;
 	
-	return {MHI, DHI, Mstar, Ropt, vflat, alpha, Mag,slope,dist,beams};
+	return {MHI, DHI, Mstar, Ropt, vflat, alpha, sbr_stuff.x_dx, Mag, RHI5,slope,dist,beams};
 
 }
 

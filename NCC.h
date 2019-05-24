@@ -21,6 +21,7 @@ class Galaxy {
 		double alpha;
 		double dx;
 		double Mag;
+		double RHI5;
 		double slope;
 		double dist;
 		double beams;
@@ -38,9 +39,11 @@ class Galaxy {
                 	vflat = rerolled_params.r_vflat;
                 	alpha = rerolled_params.r_alpha;
                 	Mag = rerolled_params.r_Mag;
+                	RHI5 = rerolled_params.r_RHI5;
                 	slope = rerolled_params.r_slope;
                 	dist = rerolled_params.r_dist;
 			beams = rerolled_params.r_beams;
+			dx = rerolled_params.r_dx;
 			// cout << log10(MHI) << " poop" << endl;
 		}
 
