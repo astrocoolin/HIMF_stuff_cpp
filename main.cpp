@@ -59,13 +59,14 @@ int main() {
 	#pragma omp for
 	//for (i=0; i < 1006971; i++){
 	//for (i=0; i < 456971934; i++){
-	for (i=0; i < 1; i++){
+	for (i=0; i < 634702; i++){
+	//for (i=0; i < 1; i++){
 		keep = true;
 		while (keep) {
 			D = pow(dis(gen)*Vmax , 1.0/3.0)*1000.0 ;
 
 			N = dis(gen)*0.11;
-			mass = dis(gen)*4.0+7.0;
+			mass = dis(gen)*2.7+7.5;
 
 			prob = HIMF_phi(mass,9.96,-1.33,4.8E-3) ; 
 			//cout << prob << endl;
