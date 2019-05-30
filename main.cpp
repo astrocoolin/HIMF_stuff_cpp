@@ -57,16 +57,17 @@ int main() {
 	Galaxy one;
 
 	#pragma omp for
-	//for (i=0; i < 1006971; i++){
+	for (i=0; i < 1006971; i++){
 	//for (i=0; i < 456971934; i++){
-	for (i=0; i < 635101; i++){
+	//for (i=0; i < 635101; i++){
 	//for (i=0; i < 1; i++){
 		keep = true;
 		while (keep) {
 			D = pow(dis(gen)*Vmax , 1.0/3.0)*1000.0 ;
 
 			N = dis(gen)*0.11;
-			mass = dis(gen)*(10.23118-7.5)+7.5;
+			//mass = dis(gen)*(10.23118-7.5)+7.5;
+			mass = dis(gen)*(13.0-7.0)+7.0;
 
 			prob = HIMF_phi(mass,9.96,-1.33,4.8E-3) ; 
 			//cout << prob << endl;
