@@ -444,6 +444,18 @@ double sbr_func_f (double x, void * p) {
 	return f;
 }
 
+double Match_velocity (double x) {
+	double a = -7.28804304e-04;
+	double b = 4.11594154e-02;
+	double c = -9.65306151e-01;
+	double d = 1.20646885e+01;
+	double e = -8.49542020e+01;
+	double f = 3.20597179e+02;
+	double g = -5.06959891e+02;
+
+	return a*pow(x,6) + b*pow(x,5) + c*pow(x,4) + d*pow(x,3) + e*pow(x,2) + f*x + g;
+
+}
 
 double find_halfmass (double RHI,double xdx, double vt, double Rs){
 	int i, status;
@@ -523,8 +535,8 @@ Galaxy_params setup_relations(double mass,double beams, double beam, double ring
 	double DHI = DHI_calc(MHI,scatter) ;
 	double Mstar = Mstar_calc_2(MHI,scatter);
 	//cout << log10(Mstar) << " "<< log10(MHI)<< endl;
-	//
-	double vflat = BTFR_2_1(Mstar + 1.4*MHI,scatter);
+	double vflat = pow(10,(Match_velocity(log(MHI))));
+	//double vflat = BTFR_2_1(Mstar + 1.4*MHI,scatter);
 	double Rs = (DHI/2.0) * 0.18;
 	double Ropt = Ropt_D_calc(DHI/2.,scatter);
 	Mag_params Mag_stuff = Mag_calc(vflat,Ropt,DHI/2.0,Mstar,scatter);
