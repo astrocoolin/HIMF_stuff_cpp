@@ -287,7 +287,7 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar,bool scat
 	
 	// Create range of magnitudes
 	// and set parameters for all mags
-	int Mag_length = 24000;
+	int Mag_length = 25000;
 	int guess_a = 4400;
 	double Mag[Mag_length];
 	double vt[Mag_length];
@@ -310,7 +310,7 @@ Mag_params Mag_calc(double vrot, double Ropt, double RHI, double mstar,bool scat
 	// This is where I'd begin the loop
 	for (int j=0; j<2; j++){
 		for (int i=0;i <= Mag_length ; i++){
-			Mag[i] = -24.0 + 0.001*i;
+			Mag[i] = -25.0 + 0.001*i;
 			vt_0[i] = V0_func(Mag[i]);
 			rt[i] = Ropt * rt_func(Mag[i]);
 			if (j == 0) {
