@@ -227,7 +227,7 @@ double Ropt_calc(double vflat, bool scatter_flag) {
 }
 
 double Ropt_D_calc(double DHI, bool scatter_flag) {
-	// Broeils & Rhee
+	// Broeils & Rhee 1997
 	// Optical Radius (R25) - DHI relationship
 	// https://ui.adsabs.harvard.edu/abs/1997A%26A...324..877B/abstract
 	
@@ -446,13 +446,28 @@ double sbr_func_f (double x, void * p) {
 
 double Match_velocity (double MHI) {
 	double x = log10(MHI);
-	double a = -7.28804304e-04;
+	/*
+	double a = -1.04664019e-03;  
+	double b = 5.75036948e-02; 
+	double c = -1.31396950e+00; 
+	double d = 1.60140171e+01;
+	double e = -1.10005094e+02;  
+	double f = 4.04961852e+02;
+	double g = -6.24802612e+02;*/
+	double a  = -7.57705437e-04;
+	double b = 4.24577508e-02;
+	double c = -9.89256008e-01;
+	double d = 1.22970483e+01;
+        double e = -8.62062488e+01;
+        double f = 3.24156887e+02;
+        double g = -5.11143975e+02;
+	/*double a = -7.28804304e-04;
 	double b = 4.11594154e-02;
 	double c = -9.65306151e-01;
 	double d = 1.20646885e+01;
 	double e = -8.49542020e+01;
 	double f = 3.20597179e+02;
-	double g = -5.06959891e+02;
+	double g = -5.06959891e+02;*/
 	double logv;
 	logv = a*pow(x,6.0) + b*pow(x,5.0) + c*pow(x,4.0) + d*pow(x,3.0) + e*pow(x,2.0) + f*x + g;
 	return pow(10,logv);
@@ -511,16 +526,16 @@ double integrate_inf(double RHI,double xdx, double vt, double Rs){
 struct sbr_params { double x_dx; double Mass_guess;};
 
 sbr_params sbr_calc(double RHI,double vt,double Rs,int radi_len,double mass){
-	int dx_range = (0.075+0.075)/0.0005;
+	int dx_range = (0.1+0.1)/0.0005;
 	double delta[dx_range+1];
 	double Mass_guess[dx_range+1];
 	double Mass_compare[dx_range+1];
 	for (int i=0;i<dx_range+1;i++){
-		delta[i] = i*0.0005 - 0.075;
+		delta[i] = i*0.0005 - 0.1;
 		Mass_guess[i] = log10(integrate_inf(RHI,delta[i],vt,Rs)
 				*1000.0*1000.0/(sbr_func(RHI,RHI,delta[i],vt,Rs)));
 		Mass_compare[i] = abs(Mass_guess[i] - mass) ;
-		//cout << i <<" " << delta[i] << " " << Mass_guess[i] << " "<< Mass_compare[i] << " " << mass << " " << integrate_inf(RHI,delta[i],vt,Rs) << " " << sbr_func(RHI,RHI,delta[i],vt,Rs) << endl;
+		cout << i <<" " << delta[i] << " " << Mass_guess[i] << " " << mass  << " " << RHI << " " <<  vt << " " << Rs << endl;
 	}
 	int j = argmin(Mass_compare,dx_range+1);
 	return {delta[j],Mass_guess[j]};
