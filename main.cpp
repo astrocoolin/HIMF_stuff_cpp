@@ -1,5 +1,8 @@
 #include <iostream>
 #include <fstream>
+#include <ctime>
+#include <cstring>
+#include <string>
 //#include <chrono>
 #include <math.h>
 #include <random>
@@ -36,7 +39,11 @@ int main() {
 	double H = 70;  //km/s/mpc
 
 	ofstream myfile;
-	myfile.open("Glist.txt", ios::trunc | ios::out);
+	time_t now = time(0);
+	string now_str = to_string(now);
+	string fname = "Glist"+now_str+".txt"	;
+		
+	myfile.open(fname, ios::trunc | ios::out);
 	myfile << "MHI "<< "DHI " << "Mstar "<< "vflat " << 
 		"alpha "  << "Ropt " <<  "Mag " << " RHI5 " <<
 		" slope "<< "dist_MPC " << " dx " << "beams" << endl;
@@ -57,10 +64,10 @@ int main() {
 	Galaxy one;
 
 	#pragma omp for
-	for (i=0; i < 1006971; i++){
+	//for (i=0; i < 1006971; i++){
 	//for (i=0; i < 456971934; i++){
 	//for (i=0; i < 635101; i++){
-	//for (i=0; i < 1; i++){
+	for (i=0; i < 1; i++){
 		keep = true;
 		while (keep) {
 			D = pow(dis(gen)*Vmax , 1.0/3.0)*1000.0 ;

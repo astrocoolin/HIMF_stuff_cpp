@@ -535,7 +535,7 @@ sbr_params sbr_calc(double RHI,double vt,double Rs,int radi_len,double mass){
 		Mass_guess[i] = log10(integrate_inf(RHI,delta[i],vt,Rs)
 				*1000.0*1000.0/(sbr_func(RHI,RHI,delta[i],vt,Rs)));
 		Mass_compare[i] = abs(Mass_guess[i] - mass) ;
-		cout << i <<" " << delta[i] << " " << Mass_guess[i] << " " << mass  << " " << RHI << " " <<  vt << " " << Rs << endl;
+		//cout << i <<" " << delta[i] << " " << Mass_guess[i] << " " << mass  << " " << RHI << " " <<  vt << " " << Rs << endl;
 	}
 	int j = argmin(Mass_compare,dx_range+1);
 	return {delta[j],Mass_guess[j]};
