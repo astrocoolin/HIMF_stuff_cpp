@@ -555,7 +555,7 @@ Galaxy_params setup_relations(double mass,double beams, double beam, double ring
 	double vflat = Match_velocity(MHI);
 	//double vflat = BTFR_2_1(Mstar + 1.4*MHI,scatter);
 	double vflat_BTFR = BTFR_2_1(Mstar + 1.4*MHI,scatter);
-	if (vflat_BTFR > vflat){vflat = vflat_BTFR;}
+	//if (vflat_BTFR > vflat){vflat = vflat_BTFR;}
 	double Rs = (DHI/2.0) * 0.18;
 	double Ropt = Ropt_D_calc(DHI/2.,scatter);
 	Mag_params Mag_stuff = Mag_calc(vflat,Ropt,DHI/2.0,Mstar,scatter);
