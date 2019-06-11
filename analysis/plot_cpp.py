@@ -36,29 +36,47 @@ def polyex(inmag,alpha,Ropt,r):
     func = V0*(1.0-np.exp(-r/rt))*(1.0+alpha*r/rt)
     return func
 
-Glist = ascii.read('Glist.txt')
-print('Loaded Galaxies')
+fname_list = np.loadtxt('list.dat',dtype=np.str)
+Array_list = []
+beams = []
+MHI = []
+dist_MPC = []
+DHI = []
+Rs = []
+RHI = []
+vflat = []
+alpha = []
+mag =  []
+ropt =  []
+dx = []
+RHI5 = []
+Mstar = []
+slope = []
 
-beams = Glist['beams']
-MHI = Glist['MHI']
-dist_MPC = Glist['MHI']
-DHI = Glist['DHI']
-Rs = (DHI/2.)*0.18
-RHI = DHI/2.
-vflat = Glist['vflat']
-alpha = Glist['alpha']
-mag = Glist['Mag']
-ropt = Glist['Ropt']
-dx = Glist['dx']
-RHI5 = Glist['RHI5']
-Mstar = Glist['Mstar']
-slope = Glist['slope']
+for i in range(0,len(fname_list)):
+    Array_list.append(ascii.read(fname_list[i]))
+    print('Loaded Galaxy '+str(i)+' of '+str(len(fname_list)))
 
-vtest_RHI = polyex(mag,alpha,ropt,RHI)
-vtest_OPT = polyex(mag,alpha,ropt,ropt)
-vtest_RHI5 = polyex(mag,alpha,ropt,RHI5)
+    beams.append( Array_list[i]['beams'])
+    MHI.append( Array_list[i]['MHI'])
+    dist_MPC.append( Array_list[i]['MHI'])
+    DHI.append( Array_list[i]['DHI'])
+    Rs.append( (DHI[i]/2.)*0.18)
+    RHI.append( DHI[i]/2.)
+    vflat.append( Array_list[i]['vflat'])
+    alpha.append( Array_list[i]['alpha'])
+    mag.append( Array_list[i]['Mag'])
+    ropt.append( Array_list[i]['Ropt'])
+    dx.append( Array_list[i]['dx'])
+    RHI5.append( Array_list[i]['RHI5'])
+    Mstar.append( Array_list[i]['Mstar'])
+    slope.append( Array_list[i]['slope'])
 
-N = len(Glist)
+    #vtest_RHI = polyex(mag,alpha,ropt,RHI)
+    #vtest_OPT = polyex(mag,alpha,ropt,ropt)
+    #vtest_RHI5 = polyex(mag,alpha,ropt,RHI5)
+
+N = len(Array_list[0])
 z = 0.03
 c = 3E5 #km/s
 H = 70 #km/s
@@ -94,19 +112,20 @@ ax1.set_ylabel('N')
 
 lims = limcalc(MHI)
 
-yplt,xplt = np.histogram(MHI,weights=lims[0],bins=lims[1]) 
-zplt = yplt * 0
-for i,x in enumerate(zplt):
-    zplt[i] = (xplt[i]+xplt[i+1])/2.
-ax1.hist(MHI,weights=lims[0],histtype='step',bins=lims[1])
+for i in range(0,len(fname_list)): 
+    yplt,xplt = np.histogram(MHI[i],weights=lims[0][i],bins=lims[1]) 
+    zplt = yplt * 0 
+    for j,x in enumerate(zplt): 
+        zplt[j] = (xplt[j]+xplt[j+1])/2. 
+    ax1.scatter(zplt,yplt,marker="+")
 
-ax1.scatter(zplt,yplt,color='C3',marker="+")
+#ax1.scatter(zplt,yplt,color='C3',marker="+")
 ax1.plot(Mrange,Analytic,color='C1')
 ax1.set_yscale('log')
 ax1.set_xlim(lims[2],lims[3])
 
 ax2 = plt.subplot(gs[3:,:])
-ax2.hist(MHI,histtype='step',color='black',bins=lims[1])
+ax2.hist(MHI,histtype='step',bins=lims[1])
 ax2.set_yscale('log')
 ax2.set_ylabel('N')
 ax2.set_xlabel('HI Mass')
@@ -126,14 +145,15 @@ ax1.set_xlabel('Vcirc')
 
 lims = limcalc(np.log10(vflat))
 
-yplt,xplt = np.histogram(np.log10(vflat),weights=lims[0],bins=lims[1])           
-zplt = yplt * 0
-for i,x in enumerate(zplt):
-    zplt[i] = (xplt[i]+xplt[i+1])/2.
+for i in range(0,len(fname_list)):
+    yplt,xplt = np.histogram(np.log10(vflat[i]),weights=lims[0][i],bins=lims[1])           
+    zplt = yplt * 0
+    for j,x in enumerate(zplt):
+        zplt[j] = (xplt[j]+xplt[j+1])/2.
+    
+    ax1.scatter(zplt,yplt,marker="+")
 
-ax1.scatter(zplt,yplt,color='C3',marker="+")
-
-ax1.hist(np.log10(vflat),weights=lims[0],histtype='step',bins=lims[1],color='C4',label='0.5 Msun/Pc$^2$')
+#ax1.hist(np.log10(vflat),weights=lims[0],histtype='step',bins=lims[1],color='C4',label='0.5 Msun/Pc$^2$')
 ax1.plot(np.log10(Vrange),VAnalytic,color='C1',label='Analytic')
 ax1.set_yscale('log')
 #ax1.set_xlim(lims[2],lims[3])
