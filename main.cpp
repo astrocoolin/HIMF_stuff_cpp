@@ -65,8 +65,6 @@ int main() {
 
 	#pragma omp for
 	//for (i=0; i < 1006971; i++){
-	//for (i=0; i < 456971934; i++){
-	//for (i=0; i < 635101; i++){
 	for (i=0; i < 1; i++){
 		keep = true;
 		while (keep) {
